@@ -1,0 +1,12 @@
+# Binarios de compilacion de Arduino IDE
+build/
+*.bin
+*.elf
+*.map
+
+# Archivos temporales de Office
+~$*
+
+# Python / datos locales
+__pycache__/
+.venv/
