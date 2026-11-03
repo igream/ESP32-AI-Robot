@@ -108,9 +108,11 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 ### Estado de git
 
-- Último commit subido: `d968dd5` (código base del kit, cambio de WiFi, docs y pendientes).
-- Sin commit todavía: el firmware movido a `firmware/robot_esp32cam/` con `git mv` (antes estaba en la raíz como `ESP32_Camera_4WD_Robot_Car_OV3660_V3.ino`), `robot_motion.*`, `herramientas/`, `docs/Tarea1/` y `docs/PENDIENTES.md` actualizado.
-- Fer no había decidido si subirlos antes o después de probar en el robot.
+- `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
+- Antes de eso estaba el commit base `d968dd5`: código del kit, cambio de WiFi, docs y pendientes.
+- El firmware estaba originalmente en la raíz como `ESP32_Camera_4WD_Robot_Car_OV3660_V3.ino` y se movió con `git mv`.
+- GitHub CLI (`C:/Program Files/GitHub CLI/gh.exe`) está instalado y con sesión de la cuenta `igream`. No está en el PATH de Git Bash.
+- El repo no tiene CI.
 - `build/` contiene el binario original del fabricante y está ignorado.
 
 ## Notas del entorno
