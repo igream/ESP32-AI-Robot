@@ -1,16 +1,14 @@
 # Prueba de funcionalidad de un robot móvil diferencial
 
-**Curso:** Robótica · **Carrera:** Ingeniería en Computación
-**Integrante:** Fer (trabajo individual) · **Fecha:** ____________
+**Curso:** Robótica · **Carrera:** Ingeniería en Computación<br>
+**Integrante:** Fer (trabajo individual) · **Fecha:** ____________<br>
 **Repositorio:** https://github.com/igream/ESP32-AI-Robot
-
-> Borrador. Los campos `____` y las tablas vacías se llenan con las mediciones; las tablas de la sección 6 las genera `herramientas/calibrar.py analizar` en `herramientas/datos/analisis/resumen.md`.
 
 ---
 
 ## 1. Objetivo
 
-Armar y verificar un robot móvil de ruedas diferencial basado en ESP32-CAM y L298N. El robot ejecuta rutinas de movimiento básicas (adelante, atrás, giro a la izquierda, giro a la derecha y vuelta de 360°). Esas rutinas se calibran con un procedimiento estadístico, para saber cuánto se mueve el robot de forma precisa y poder ordenarle desplazamientos por coordenadas.
+Armar y verificar un robot móvil de ruedas diferencial basado en ESP32-CAM y L298N. El robot ejecuta rutinas de movimiento básicas (adelante, atrás, giro a la izquierda, giro a la derecha y vuelta de 360°). Los tiempos de cada rutina se calibran midiendo en el piso (3 repeticiones por movimiento) para saber cuánto se mueve el robot.
 
 ## 2. Materiales
 
@@ -41,7 +39,7 @@ Armar y verificar un robot móvil de ruedas diferencial basado en ESP32-CAM y L2
 | — | OUT3/OUT4 | 2 motores del lado derecho en paralelo |
 | Batería + (por el interruptor) | +12V | Alimentación de motores |
 
-> Verificar con el robot armado que IN1/IN2 correspondan al lado izquierdo; si no, intercambiar en `robot_motion.h`.
+> Verificado con el comando `mot`: IN1/IN2 (GPIO12/13) mueven el lado izquierdo, e IN3/IN4 (GPIO14/15) el derecho, en el sentido correcto.
 
 Los pines 12–15 se comparten con la ranura microSD, que no se usa. Pines ocupados por la cámara: 0, 5, 18, 19, 21–23, 25–27, 32, 34–36 y 39. El GPIO4 es el LED flash y el GPIO33 es el LED rojo de la placa. GPIO12 es un pin de arranque (strapping): si está en alto al encender, el ESP32 elige 1.8 V para la flash y no arranca. Con el L298N conectado arranca bien porque las entradas del L298N no lo jalan a alto.
 
@@ -113,19 +111,17 @@ Secuencia (comando `seq` o botón **Secuencia**): inicio de 3 s, adelante, atrá
 | 4 | Giro derecha | +140 / −140 | 500 ms | ___ |
 | 5 | Giro 360° | −140 / +140 | 1800 ms | ___ |
 
-### 6.3 Parte D – Calibración y medición (mínimo 3 repeticiones; se recomiendan 10)
+### 6.3 Parte D – Calibración y medición (3 repeticiones)
 
-| Movimiento | Tiempo (ms) | Resultado esperado | Resultado medido (media ± DE, n) | Error |
-|---|---|---|---|---|
-| Adelante | ___ | Línea recta de 1 m | Desviación lateral: ___ cm | ___ |
-| Atrás | ___ | Regreso al punto de inicio | Distancia al origen: ___ cm | ___ |
-| Izquierda | ___ | 90° | Ángulo: ___° | ___ |
-| Derecha | ___ | 90° | Ángulo: ___° | ___ |
-| 360° | ___ | 360° | Ángulo: ___° | ___ |
+Piso marcado con cinta: una línea de 1 m y una cruz de ángulos. Los tiempos se ajustaron con una prueba previa y después se repitió cada movimiento 3 veces.
 
-### 6.4 Análisis estadístico
-
-*(Pegar aquí las tablas y gráficas de `herramientas/datos/analisis/resumen.md`: descriptiva, regresión, comparaciones y validación por coordenadas.)*
+| Movimiento | Tiempo (ms) | Resultado esperado | Medido (rep. 1 / 2 / 3) | Promedio | Error |
+|---|---|---|---|---|---|
+| Adelante | ___ | Línea recta de 1 m | Desviación lateral: ___ / ___ / ___ cm | ___ cm | ___ |
+| Atrás | ___ | Regreso al punto de inicio | Distancia al origen: ___ / ___ / ___ cm | ___ cm | ___ |
+| Izquierda | ___ | 90° | ___ / ___ / ___ ° | ___° | ___ |
+| Derecha | ___ | 90° | ___ / ___ / ___ ° | ___° | ___ |
+| 360° | ___ | 360° | ___ / ___ / ___ ° | ___° | ___ |
 
 ## 7. Preguntas de análisis
 
@@ -137,7 +133,7 @@ Porque es un control en lazo abierto: el mismo PWM no garantiza la misma velocid
 - Que cada lado arranca con un PWM mínimo distinto (Parte B).
 - Diferencias de caída de voltaje entre los dos canales del L298N.
 
-Una diferencia de velocidad de pocos por ciento produce una curvatura constante, y la desviación lateral crece con el cuadrado de la distancia: y ≈ κ·D²/2. Resultado medido: ___ cm a 1 m (prueba t: p = ___).
+Una diferencia de velocidad de pocos por ciento produce una curvatura constante, y la desviación lateral crece con el cuadrado de la distancia: y ≈ κ·D²/2. Resultado medido: desviación lateral promedio de ___ cm en 1 m.
 
 **2. ¿Qué diferencia hay entre girar con un motor detenido y girar con motores en sentidos opuestos?**
 
@@ -148,14 +144,14 @@ Una diferencia de velocidad de pocos por ciento produce una curvatura constante,
 | El robot se desplaza | Sí, su centro describe un arco de radio L/2 | No, gira en su lugar |
 | Uso | Giros suaves en movimiento | Cambiar de orientación sin moverse |
 
-En un robot 4WD como este, los dos tipos de giro hacen derrapar las llantas delanteras y traseras, por eso el giro real es más lento que el teórico. Medido a 500 ms: eje = ___°, pivote = ___° (t de Welch p = ___).
+En un robot 4WD como este, los dos tipos de giro hacen derrapar las llantas delanteras y traseras, por eso el giro real es más lento que el teórico. El programa usa giros sobre su eje.
 
 **3. ¿Cómo afecta la caída de voltaje del L298N y el nivel de batería al comportamiento?**
 El L298N usa transistores bipolares y pierde unos 2 V (1.8–3.2 V según la corriente). Con el mismo PWM, el voltaje promedio del motor es aproximadamente PWM/255 · (V_bat − 2 V):
 - Batería llena (12.6 V) y PWM 140: ≈ 5.8 V.
 - Batería baja (~9.6 V bajo carga) y el mismo PWM: ≈ 4.2 V, es decir ~28 % menos velocidad.
 
-Por eso los tiempos calibrados solo valen para un rango de carga de batería, y la desviación cambia si un canal pierde más que el otro. Medido: correlación voltaje–avance r = ___ (p = ___). Mitigaciones:
+Por eso los tiempos calibrados solo valen para un rango de carga de batería, y la desviación cambia si un canal pierde más que el otro. Voltaje medido de la batería: ___ V. Mitigaciones:
 - Medir la batería y compensar el PWM.
 - Usar un driver MOSFET (por ejemplo TB6612FNG, con ~0.5 V de caída).
 - Cerrar el lazo con sensores.
@@ -165,7 +161,7 @@ Por eso los tiempos calibrados solo valen para un rango de carga de batería, y 
 - Giro sobre su eje: v_R = v, v_L = −v, así que ω = 2v / L.
 - Tiempo para 90°: t₉₀ = (π/2) / ω = π·L / (4v).
 
-Con L = ___ cm y v = ___ cm/s (pendiente de la regresión), t₉₀ teórico = ___ ms contra ___ ms medidos.
+Con L = ___ cm y v = ___ cm/s (distancia medida entre tiempo en la prueba de adelante), t₉₀ teórico = ___ ms contra ___ ms medidos.
 
 La diferencia se explica con la L efectiva = 2v/ω_medida = ___ cm (factor de derrape L_ef/L = ___): en un 4WD con dirección por derrape, las llantas se arrastran de lado al girar.
 
@@ -185,7 +181,8 @@ La diferencia se explica con la L efectiva = 2v/ω_medida = ___ cm (factor de de
 | El log de cada cuadro de video llenaba el monitor serie | Se desactivó con `LOG_STREAM 0` |
 | Arduino exige que la carpeta se llame igual que el `.ino` | Firmware movido a `firmware/robot_esp32cam/` |
 | Calibración perdida al reiniciar | Parámetros guardados en flash (NVS) con `Preferences` |
-| ___ | ___ |
+| Con el core ESP32 3.3.12 la cámara no iniciaba (`frame buffer malloc failed`) y el programa se detenía sin crear el WiFi | `camera_config_t` se inicializa en ceros y se fijan `fb_location` (PSRAM) y `grab_mode`; si la cámara falla, el WiFi y los motores siguen funcionando |
+| El PWM mínimo variaba según si se consideraba una o las dos llantas del lado | Criterio fijo: se marca cuando giran las dos llantas |
 
 ## 9. Conclusiones
 

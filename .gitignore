@@ -10,3 +10,6 @@ build/
 # Python / datos locales
 __pycache__/
 .venv/
+
+# Reporte
+docs/Tarea1/_reporte.html
