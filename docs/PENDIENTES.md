@@ -56,6 +56,6 @@ Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y
 - [x] Endpoint `/move`, secuencia de la tarea, prueba de motores y rampa de PWM mínimo, con etiquetas en el monitor serie.
 - [x] Script de PC para registrar pruebas y calcular estadística (`herramientas/calibrar.py`), probado con datos simulados.
 - [x] Borrador del reporte (`docs/Tarea1/REPORTE.md`).
-- [ ] Subir el firmware al robot y probarlo con las ruedas en el aire.
-- [ ] Mediciones: PWM mínimo, barridos, pruebas de comparación y validación por coordenadas.
+- [x] Subir el firmware al robot y probarlo con las ruedas en el aire (sentido de motores y PWM mínimo, Parte B).
+- [ ] Mediciones: barridos, pruebas de comparación y validación por coordenadas.
 - [ ] Llenar las tablas del reporte, fotos, diagrama dibujado, video y exportar a PDF.

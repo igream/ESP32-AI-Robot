@@ -79,7 +79,10 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 ### Estado de la Tarea 1
 
-- **Firmware** (`firmware/robot_esp32cam/`): compila sin errores ni avisos con el core ESP32 3.3.12 (fqbn `esp32:esp32:esp32cam`; el IDE actualizó el core desde 3.1.0). Usa 33 % de flash y 20 % de RAM. **Subido al robot el 2026-11-02** por COM8: arranca con PSRAM, cámara, AP y servidor web. Para eso, `camera_config_t` se inicializa en ceros y fija `fb_location`/`grab_mode`; antes, con campos sin inicializar, fallaba con `frame buffer malloc failed`. Si la cámara falla, el WiFi y los motores siguen funcionando. Motores aún sin probar.
+- **Firmware** (`firmware/robot_esp32cam/`): compila sin errores ni avisos con el core ESP32 3.3.12 (fqbn `esp32:esp32:esp32cam`; el IDE actualizó el core desde 3.1.0). Usa 33 % de flash y 20 % de RAM. **Subido al robot el 2026-11-02** por COM8: arranca con PSRAM, cámara, AP y servidor web. Para eso, `camera_config_t` se inicializa en ceros y fija `fb_location`/`grab_mode`; antes, con campos sin inicializar, fallaba con `frame buffer malloc failed`. Si la cámara falla, el WiFi y los motores siguen funcionando.
+- **Parte B hecha (2026-11-02):**
+  - `mot` confirma que GPIO12/13 son el lado izquierdo y que los cuatro sentidos son correctos.
+  - PWM mínimo con el criterio "giran las dos llantas": izquierdo 69.3 ± 1.9, derecho 79.3 ± 8.9 (n = 7 por lado; Welch p = 0.024). El lado derecho tiene más fricción estática (valores de 70 u 85–90, arranque brusco). Los resultados ya están en `REPORTE.md` §6.1.
   - `robot_esp32cam.ino`:
     - Cámara.
     - WiFi en modo punto de acceso: SSID `ESP32Car_Fer`, contraseña `Fer12345.`, IP `192.168.4.1`.
@@ -104,7 +107,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
   - En la máquina `Admin` usa el entorno `.venv` (numpy 2.5, scipy 1.18, matplotlib 3.11), que está en `.gitignore`. En la PC de escritorio corre con el Python del sistema; se probó con `--simular` el 2026-11-02.
 - **Borrador del reporte** (`docs/Tarea1/REPORTE.md`): conexiones, diagrama Mermaid, diseño del PWM, código, tablas de las Partes B/C/D por llenar, respuestas de la Parte E con huecos `___` para los datos, y problemas y soluciones.
 - **Pendientes y decisiones:** `docs/PENDIENTES.md`.
-- **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la batería, PWM mínimo, barridos y validación.
+- **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la batería, barridos y validación.
 
 ### Estado de git
 
