@@ -3,7 +3,7 @@
 Proyecto escolar de robótica (Ingeniería en Computación). Fer lo trabaja **solo**, no en equipo, y se comunica en español. Su nivel técnico es alto: revisa las propuestas punto por punto y aprueba o corrige cada decisión. A veces trabaja por Remote Control desde otro dispositivo, y la PC puede estar suspendida (sin internet) en esos momentos.
 
 - Repositorio: https://github.com/igream/ESP32-AI-Robot (rama `main`).
-- Carpeta local: `C:\Users\Admin\Desktop\ESP32 CAR`.
+- Carpeta local (PC de escritorio, la principal): `G:\Mi unidad\Escuela\Universidad\07 Septimo Semestre\Robótica\Proyecto\ESP32-AI-Robot` (dentro de Google Drive). En la otra máquina (usuario `Admin`) estaba en `C:\Users\Admin\Desktop\ESP32 CAR`.
 - Autor de git configurado solo para este repo: `Fer <ferazuiba@gmail.com>`.
 
 ## Objetivos del curso (en orden)
@@ -101,7 +101,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
   - Guarda en `herramientas/datos/pruebas.csv`; el análisis queda en `herramientas/datos/analisis/` (`resumen.md`, gráficas PNG, `sugerencias.json`).
   - Estadística: descriptiva con IC95 t, Shapiro-Wilk, atípicos IQR, tamaño de muestra, t de una muestra de la desviación normalizada a 1 m (recorridos de 30 cm o más), regresión tiempo → distancia/ángulo, L efectiva y factor de derrape, t de Welch, Pearson voltaje–residuo y ANOVA por superficie.
   - Probado de punta a punta solo con datos simulados.
-  - Usa el entorno `.venv` (numpy 2.5, scipy 1.18, matplotlib 3.11), que está en `.gitignore`.
+  - En la máquina `Admin` usa el entorno `.venv` (numpy 2.5, scipy 1.18, matplotlib 3.11), que está en `.gitignore`. En la PC de escritorio corre con el Python del sistema; se probó con `--simular` el 2026-11-02.
 - **Borrador del reporte** (`docs/Tarea1/REPORTE.md`): conexiones, diagrama Mermaid, diseño del PWM, código, tablas de las Partes B/C/D por llenar, respuestas de la Parte E con huecos `___` para los datos, y problemas y soluciones.
 - **Pendientes y decisiones:** `docs/PENDIENTES.md`.
 - **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la batería, PWM mínimo, barridos y validación.
@@ -111,15 +111,18 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 - `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
 - Antes de eso estaba el commit base `d968dd5`: código del kit, cambio de WiFi, docs y pendientes.
 - El firmware estaba originalmente en la raíz como `ESP32_Camera_4WD_Robot_Car_OV3660_V3.ino` y se movió con `git mv`.
-- GitHub CLI (`C:/Program Files/GitHub CLI/gh.exe`) está instalado y con sesión de la cuenta `igream`. No está en el PATH de Git Bash.
+- GitHub CLI (`C:/Program Files/GitHub CLI/gh.exe`) está instalado en la máquina `Admin`, con sesión de la cuenta `igream`, y no está en el PATH de Git Bash. En la PC de escritorio no está instalado.
 - El repo no tiene CI.
 - `build/` contiene el binario original del fabricante y está ignorado.
 
 ## Notas del entorno
 
 - **Sistema:** Windows 11, con Git Bash y PowerShell.
-- **arduino-cli:** `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`. El core esp32 3.1.0 está instalado en `%LOCALAPPDATA%\Arduino15`.
-- **Python del sistema:** 3.14, sin scipy; las librerías están en `.venv`.
+- **arduino-cli:**
+  - PC de escritorio: `C:/Users/feraz/AppData/Local/Programs/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe` (versión 1.5.1). El core esp32 3.1.0 está instalado en `%LOCALAPPDATA%\Arduino15` (2026-11-02) y el firmware compila igual: 33 % de flash y 17 % de RAM. Conviene compilar con `--build-path` fuera de Google Drive.
+  - Máquina `Admin`: `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`.
+- **Driver CH340:** instalado en la PC de escritorio. COM3 y COM4 son Bluetooth, no la placa.
+- **Python del sistema:** 3.14. En la PC de escritorio ya tiene numpy, scipy, matplotlib y pyserial. En la máquina `Admin` no tiene scipy y las librerías están en `.venv`.
 - **Git Bash:** los heredocs alteran las barras invertidas (`\n`, `\r\n`) en scripts de Python; aplicar parches con el editor de archivos evita ese problema.
 - **Finales de línea:** `app_httpd.cpp` usa CRLF; los archivos nuevos usan LF.
 - **Mercado Libre:** pide verificación de cuenta para ver búsquedas o fichas en el navegador integrado; los carritos compartidos sí se pueden leer.
