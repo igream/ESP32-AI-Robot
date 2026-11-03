@@ -15,16 +15,47 @@
 - [x] **Arquitectura futura:** Raspberry Pi 5 de 4 GB (visión y voz) + ESP32-WROOM-32D (motores, LEDs, sensores) por UART.
 
 ## Compras
-- [ ] Raspberry Pi 5 de 4 GB.
-- [ ] Fuente de 5 V / 5 A para la Pi desde la batería (convertidor reductor).
-- [ ] Cámara para la Pi (Camera Module 3 o una webcam USB). Se decide en el punto 3.
+Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y batería 3×18650.
+
+### Indispensables
+- [ ] Raspberry Pi 5 de 4 GB (~$110 USD).
+- [ ] microSD de 32–64 GB, clase A2 (~$10).
+- [ ] Disipador con ventilador para la Pi 5 (Active Cooler, ~$5). Sin él, la Pi baja su velocidad al correr modelos.
+- [ ] Convertidor reductor de 5 V / 5 A con entrada de 12 V, para alimentar la Pi desde la batería (~$10–15).
+- [ ] Micrófono USB pequeño (~$5–10). La Pi 5 no tiene entrada de audio.
+- [ ] LED rojo, LED azul y resistencias de 220 Ω (~$2).
+- [ ] Cables Dupont macho-hembra (~$3).
+
+### Recomendados para precisión y sensores (van al ESP32-WROOM-32D)
+- [ ] IMU MPU6050 (~$3): mide el ángulo real del giro.
+- [ ] Sensor ultrasónico HC-SR04P (versión 3–5 V: alimentado a 3.3 V no necesita divisor).
+- [ ] Resistencias para un divisor de voltaje que mida la batería (por ejemplo 30 kΩ + 7.5 kΩ).
+- Descartado por ahora: encoders LM393.
+
+### Lista final revisada (2026-11-02) – todo compatible
+- Mercado Libre:
+  - Raspberry Pi 5 4 GB ($3,201).
+  - Convertidor JELELECRONICA MDC-DC12-24A5V5A: entrada 9–36 V, salida 5 V 5 A (30 W), con USB ($78).
+  - MPU6050 ×5 ($215).
+- Amazon:
+  - microSD SanDisk Extreme PRO 64 GB, vendida por Amazon México ($499).
+  - 2 cables Fasgear USB-A → USB-C de 30 cm, 3 A ($240).
+  - HC-SR04P ($66), Active Cooler para Pi 5 ($235), micrófono USB SunFounder ($191).
+- Ya tengo: LEDs rojo/azul, resistencias de 220 Ω y cables Dupont.
+- Al instalar la Pi: configurar `PSU_MAX_CURRENT=5000` en la EEPROM, porque el convertidor no negocia corriente por USB-C.
+
+### Solo si hace falta después
+- [ ] Cámara para la Pi (Camera Module 3), si el video del ESP32-CAM no alcanza en el punto 4.
+- [ ] AI HAT+ para la Pi, si la detección de objetos va muy lenta.
 
 ## Decisiones abiertas
 - [ ] Repositorio: decidir si el manual del fabricante (PDF) se queda en el repo público.
 
 ## Tarea 1 – Robot móvil diferencial
-- [ ] Firmware de calibración: WiFi `ESP32Car_Fer`, funciones modulares, ajuste por motor y `PWM_MAX`.
-- [ ] Endpoint `/move` y secuencia de la tarea con etiquetas en el monitor serie.
-- [ ] Prueba de PWM mínimo (ruedas en el aire).
-- [ ] Script de PC para registrar pruebas y calcular estadística.
-- [ ] Tablas de calibración, video, fotos, diagrama y reporte PDF.
+- [x] Firmware de calibración (`firmware/robot_esp32cam/`): WiFi `ESP32Car_Fer`, funciones modulares, corrección por lado y `pwm_max`. Compila con el core ESP32 3.1.0.
+- [x] Endpoint `/move`, secuencia de la tarea, prueba de motores y rampa de PWM mínimo, con etiquetas en el monitor serie.
+- [x] Script de PC para registrar pruebas y calcular estadística (`herramientas/calibrar.py`), probado con datos simulados.
+- [x] Borrador del reporte (`docs/Tarea1/REPORTE.md`).
+- [ ] Subir el firmware al robot y probarlo con las ruedas en el aire.
+- [ ] Mediciones: PWM mínimo, barridos, pruebas de comparación y validación por coordenadas.
+- [ ] Llenar las tablas del reporte, fotos, diagrama dibujado, video y exportar a PDF.
