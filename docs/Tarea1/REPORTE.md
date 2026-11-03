@@ -21,7 +21,7 @@ Armar y verificar un robot móvil de ruedas diferencial basado en ESP32-CAM y L2
 | Placa de programación ESP32-CAM-MB | USB–serie CH340 |
 | Driver L298N | Puente H doble, hasta 2 A por canal |
 | Baterías | 3 × 18650 (11.1 V nominal, 12.6 V cargadas) |
-| Software | Arduino IDE / arduino-cli, core ESP32 3.1.0; Python 3 con numpy, scipy y matplotlib |
+| Software | Arduino IDE / arduino-cli, core ESP32 3.3.12; Python 3 con numpy, scipy y matplotlib |
 | Medición | Cinta métrica, cinta de color, multímetro, cámara de video |
 
 ## 3. Conexiones

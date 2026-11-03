@@ -52,7 +52,7 @@ Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y
 - [ ] Repositorio: decidir si el manual del fabricante (PDF) se queda en el repo público.
 
 ## Tarea 1 – Robot móvil diferencial
-- [x] Firmware de calibración (`firmware/robot_esp32cam/`): WiFi `ESP32Car_Fer`, funciones modulares, corrección por lado y `pwm_max`. Compila con el core ESP32 3.1.0.
+- [x] Firmware de calibración (`firmware/robot_esp32cam/`): WiFi `ESP32Car_Fer`, funciones modulares, corrección por lado y `pwm_max`. Compila con el core ESP32 3.3.12.
 - [x] Endpoint `/move`, secuencia de la tarea, prueba de motores y rampa de PWM mínimo, con etiquetas en el monitor serie.
 - [x] Script de PC para registrar pruebas y calcular estadística (`herramientas/calibrar.py`), probado con datos simulados.
 - [x] Borrador del reporte (`docs/Tarea1/REPORTE.md`).

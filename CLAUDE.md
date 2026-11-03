@@ -79,7 +79,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 ### Estado de la Tarea 1
 
-- **Firmware** (`firmware/robot_esp32cam/`): compila sin errores ni avisos con el core ESP32 3.1.0 (fqbn `esp32:esp32:esp32cam`). Usa 33 % de flash y 17 % de RAM. **No se ha subido ni probado en el robot.**
+- **Firmware** (`firmware/robot_esp32cam/`): compila sin errores ni avisos con el core ESP32 3.3.12 (fqbn `esp32:esp32:esp32cam`; el IDE actualizó el core desde 3.1.0). Usa 33 % de flash y 20 % de RAM. **Subido al robot el 2026-11-02** por COM8: arranca con PSRAM, cámara, AP y servidor web. Para eso, `camera_config_t` se inicializa en ceros y fija `fb_location`/`grab_mode`; antes, con campos sin inicializar, fallaba con `frame buffer malloc failed`. Si la cámara falla, el WiFi y los motores siguen funcionando. Motores aún sin probar.
   - `robot_esp32cam.ino`:
     - Cámara.
     - WiFi en modo punto de acceso: SSID `ESP32Car_Fer`, contraseña `Fer12345.`, IP `192.168.4.1`.
@@ -119,7 +119,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 - **Sistema:** Windows 11, con Git Bash y PowerShell.
 - **arduino-cli:**
-  - PC de escritorio: `C:/Users/feraz/AppData/Local/Programs/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe` (versión 1.5.1). El core esp32 3.1.0 está instalado en `%LOCALAPPDATA%\Arduino15` (2026-11-02) y el firmware compila igual: 33 % de flash y 17 % de RAM. Conviene compilar con `--build-path` fuera de Google Drive.
+  - PC de escritorio: `C:/Users/feraz/AppData/Local/Programs/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe` (versión 1.5.1). El core esp32 3.3.12 está instalado en `%LOCALAPPDATA%\Arduino15`. El ESP32-CAM-MB aparece en COM8 y la subida con reinicio automático funciona sin presionar IO0. Conviene compilar con `--build-path` fuera de Google Drive.
   - Máquina `Admin`: `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`.
 - **Driver CH340:** instalado en la PC de escritorio. COM3 y COM4 son Bluetooth, no la placa.
 - **Python del sistema:** 3.14. En la PC de escritorio ya tiene numpy, scipy, matplotlib y pyserial. En la máquina `Admin` no tiene scipy y las librerías están en `.venv`.

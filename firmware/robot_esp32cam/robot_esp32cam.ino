@@ -68,7 +68,7 @@ void setup() {
   pinMode(gpLed, OUTPUT); //Light
   digitalWrite(gpLed, LOW);
 
-  camera_config_t config;
+  camera_config_t config = {};  // en ceros: los campos que no se asignan no quedan con basura
   config.ledc_channel = LEDC_CHANNEL_0;
   config.ledc_timer = LEDC_TIMER_0;
   config.pin_d0 = Y2_GPIO_NUM;
@@ -89,31 +89,34 @@ void setup() {
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
+  config.grab_mode = CAMERA_GRAB_LATEST;
   //init with high specs to pre-allocate larger buffers
+  Serial.printf("PSRAM: %s\n", psramFound() ? "si" : "no");
   if(psramFound()){
     config.frame_size = FRAMESIZE_UXGA;
     config.jpeg_quality = 10;
     config.fb_count = 2;
+    config.fb_location = CAMERA_FB_IN_PSRAM;
   } else {
     config.frame_size = FRAMESIZE_SVGA;
     config.jpeg_quality = 12;
     config.fb_count = 1;
+    config.fb_location = CAMERA_FB_IN_DRAM;
   }
 
-  // camera init
+  // camera init. Si falla, el WiFi y los motores siguen funcionando.
   esp_err_t err = esp_camera_init(&config);
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
-  }
+    Serial.printf("Camera init failed with error 0x%x\n", err);
+  } else {
+    //drop down frame size for higher initial frame rate
+    sensor_t * s = esp_camera_sensor_get();
+    s->set_framesize(s, FRAMESIZE_QVGA);  // 320x240 for better WiFi performance
 
-  //drop down frame size for higher initial frame rate
-  sensor_t * s = esp_camera_sensor_get();
-  s->set_framesize(s, FRAMESIZE_QVGA);  // 320x240 for better WiFi performance
-  
-  // Set camera rotation 180 degrees
-  s->set_hmirror(s, 0);  // Horizontal mirror
-  s->set_vflip(s, 1);    // Vertical flip
+    // Set camera rotation 180 degrees
+    s->set_hmirror(s, 0);  // Horizontal mirror
+    s->set_vflip(s, 1);    // Vertical flip
+  }
 
   // WiFi.begin(ssid, password);
 
