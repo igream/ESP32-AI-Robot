@@ -3,8 +3,20 @@
 Proyecto escolar de robótica (Ingeniería en Computación). Fer lo trabaja **solo**, no en equipo, y se comunica en español. Su nivel técnico es alto: revisa las propuestas punto por punto y aprueba o corrige cada decisión. A veces trabaja por Remote Control desde otro dispositivo, y la PC puede estar suspendida (sin internet) en esos momentos.
 
 - Repositorio: https://github.com/igream/ESP32-AI-Robot (rama `main`).
-- Carpeta local (PC de escritorio, la principal): `G:\Mi unidad\Escuela\Universidad\07 Septimo Semestre\Robótica\Proyecto\ESP32-AI-Robot` (dentro de Google Drive). En la otra máquina (usuario `Admin`) estaba en `C:\Users\Admin\Desktop\ESP32 CAR`.
+- Carpeta local: `G:\Mi unidad\Escuela\Universidad\07 Septimo Semestre\Robótica\Proyecto\ESP32-AI-Robot` (dentro de Google Drive).
+  - Se usa desde las dos computadoras: la PC de escritorio (usuario `feraz`, la principal) y la máquina `Admin`.
+  - La máquina `Admin` tiene además una copia anterior en `C:\Users\Admin\Desktop\ESP32 CAR`, al día con GitHub hasta `030265f` y ya sin uso.
+  - Google Drive sincroniza también la carpeta `.git`. Por eso GitHub es la referencia común y cada sesión empieza con el repo al día respecto a `origin/main`.
 - Autor de git configurado solo para este repo: `Fer <ferazuiba@gmail.com>`.
+
+## Organización del trabajo con dos chats
+
+Fer reparte el trabajo entre dos chats de Claude Code sobre el mismo repositorio:
+
+- **Chat con Opus:** tareas complejas, como diseño de arquitectura, firmware nuevo, depuración difícil, análisis estadístico, revisión de avances y decisiones de hardware. Este chat construyó el firmware de calibración, `calibrar.py` y el borrador del reporte.
+- **Chat con Sonnet:** tareas básicas, como llenar tablas del reporte con mediciones, ajustes pequeños de texto o código, regenerar el PDF, compilar y subir el firmware, y commits sencillos.
+
+Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial de git. No comparten conversación, así que las decisiones importantes quedan escritas aquí o en los mensajes de commit.
 
 ## Objetivos del curso (en orden)
 
@@ -76,6 +88,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 - Entregable: reporte PDF, video con el monitor serie mostrando las etiquetas, fotos y enlace a GitHub.
 - Rúbrica: +10 puntos extra por el giro de 360°.
+- Siguiente asignación: `docs/Asignaciones/Tarea_ESP32CAM_EdgeImpulse.docx` apareció en la carpeta el 2026-11-03, todavía sin commit y sin revisar. Por el nombre, trata de visión con Edge Impulse en el ESP32-CAM.
 
 ### Estado de la Tarea 1
 
@@ -115,10 +128,11 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 ### Estado de git
 
 - Después del PR, Fer subió desde la PC de escritorio el arreglo de la cámara, la Parte B, la exportación a PDF y la actualización de CLAUDE.md (commits `d19a491` a `7cecd02`).
+- `030265f` (2026-11-03): corrección de la normalidad en la Parte B, `reporte_pdf.py` también usa Chrome (la máquina `Admin` no tiene Edge), y CLAUDE.md al día.
 - `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
 - Antes de eso estaba el commit base `d968dd5`: código del kit, cambio de WiFi, docs y pendientes.
 - El firmware estaba originalmente en la raíz como `ESP32_Camera_4WD_Robot_Car_OV3660_V3.ino` y se movió con `git mv`.
-- GitHub CLI (`C:/Program Files/GitHub CLI/gh.exe`) está instalado en la máquina `Admin`, con sesión de la cuenta `igream`, y no está en el PATH de Git Bash. En la PC de escritorio no está instalado.
+- GitHub CLI (`C:/Program Files/GitHub CLI/gh.exe`) está instalado en la máquina `Admin`, con sesión de la cuenta `igream`, y no está en el PATH de Git Bash. En la PC de escritorio no está instalado. La máquina `Admin` tiene Google Chrome pero no Edge.
 - El repo no tiene CI.
 - `build/` contiene el binario original del fabricante y está ignorado.
 
