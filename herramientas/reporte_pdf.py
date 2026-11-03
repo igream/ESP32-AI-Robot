@@ -1,4 +1,4 @@
-"""Convierte docs/Tarea1/REPORTE.md a PDF con Microsoft Edge (sin instalar nada).
+"""Convierte docs/Tarea1/REPORTE.md a PDF con Microsoft Edge o Google Chrome (sin instalar nada).
 
 Uso:  python herramientas/reporte_pdf.py
 Salida: docs/Tarea1/REPORTE.pdf
@@ -16,9 +16,12 @@ RAIZ = pathlib.Path(__file__).resolve().parent.parent
 MD = RAIZ / "docs" / "Tarea1" / "REPORTE.md"
 HTML = MD.with_name("_reporte.html")
 PDF = MD.with_suffix(".pdf")
+# Edge o Chrome: los dos aceptan las mismas opciones de impresión headless.
 EDGE = [
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
     r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
 ]
 
 PLANTILLA = """<!doctype html>
@@ -51,7 +54,7 @@ PLANTILLA = """<!doctype html>
 def main():
     edge = next((e for e in EDGE if pathlib.Path(e).exists()), None)
     if not edge:
-        sys.exit("No se encontró Microsoft Edge.")
+        sys.exit("No se encontró Microsoft Edge ni Google Chrome.")
     texto = MD.read_text(encoding="utf-8")
     HTML.write_text(PLANTILLA.replace("__MD__", json.dumps(texto)), encoding="utf-8")
     subprocess.run([

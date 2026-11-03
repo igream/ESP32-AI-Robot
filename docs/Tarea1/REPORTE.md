@@ -93,7 +93,7 @@ Ruedas en el aire. Sentido: comando `mot`. PWM mínimo: comandos `min i` / `min 
 | Derecho (GPIO15/14) | 85 / 70 / 85 / 70 / 90 / 85 / 70 | 79.3 ± 8.9 (71.1–87.5) | ≈ 3.3 V | Sí | Arranca brusco. Valores en dos grupos (70 u 85–90), sin nada entre 75 y 80. |
 
 - El voltaje medio se estima con PWM/255 · (12.6 V − 2 V), con la batería llena. Falta medir el voltaje real de la batería.
-- La diferencia entre lados es significativa: t de Welch t = 2.92, gl ≈ 6.5, p = 0.024. Mann-Whitney da U = 40 y p = 0.025, que se usa porque el lado derecho no tiene distribución normal.
+- La diferencia entre lados es significativa: t de Welch t = 2.92, gl ≈ 6.5, p = 0.024. Mann-Whitney da U = 40 y p = 0.025. Se incluye porque ningún lado tiene distribución normal (Shapiro-Wilk: izquierdo p < 0.001, con 6 de 7 valores iguales; derecho p = 0.023).
 - Interpretación: el lado derecho tiene más fricción estática. Según la posición en que se detiene el engranaje del motor TT, a veces basta PWM 70 y a veces hacen falta 85–90. Una vez que vence esa fricción, sobra par y la llanta arranca de golpe. Por eso hay saltos en los datos y no una variación continua.
 - El tiempo de reacción sesga los valores al alza en un paso (5) como máximo: en todas las pruebas, `ok` se escribió dentro de los 400 ms siguientes al último paso de la rampa.
 - Una primera serie se descartó porque el criterio cambió a mitad de la serie (primero bastaba una llanta y luego se pedían las dos).

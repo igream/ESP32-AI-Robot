@@ -31,7 +31,7 @@ Proyecto escolar de robótica (Ingeniería en Computación). Fer lo trabaja **so
 | GPIO4 | LED flash |
 | GPIO33 | LED rojo de la placa (activo en bajo) |
 
-  Que GPIO12/13 correspondan físicamente al lado izquierdo no está verificado con el robot en marcha.
+  Verificado con `mot` el 2026-11-02: GPIO12/13 mueven el lado izquierdo y GPIO14/15 el derecho, en el sentido correcto.
 - **Pines libres:** el ESP32-CAM prácticamente no tiene. GPIO2 es de arranque y de la SD; GPIO16 lo usa la PSRAM; GPIO12 es de arranque (strapping), aunque el robot arranca bien con el L298N conectado.
 - **PWM:** los jumpers ENA/ENB están puestos. Decisión aprobada para la Tarea 1: la velocidad se regula con PWM en los pines IN (un IN con PWM y el otro en 0). Usar ENA/ENB queda para cuando exista el coprocesador. LEDC a 2 kHz y 8 bits, canales 4–7 con el timer 1 (la cámara usa canal 0 / timer 0).
 - **Voltaje de los motores:** desconocido; el manual no lo dice y el motor no tiene etiqueta. Se asume TT de 3–6 V.
@@ -105,12 +105,16 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
   - Estadística: descriptiva con IC95 t, Shapiro-Wilk, atípicos IQR, tamaño de muestra, t de una muestra de la desviación normalizada a 1 m (recorridos de 30 cm o más), regresión tiempo → distancia/ángulo, L efectiva y factor de derrape, t de Welch, Pearson voltaje–residuo y ANOVA por superficie.
   - Probado de punta a punta solo con datos simulados.
   - En la máquina `Admin` usa el entorno `.venv` (numpy 2.5, scipy 1.18, matplotlib 3.11), que está en `.gitignore`. En la PC de escritorio corre con el Python del sistema; se probó con `--simular` el 2026-11-02.
-- **Borrador del reporte** (`docs/Tarea1/REPORTE.md`): conexiones, diagrama Mermaid, diseño del PWM, código, tablas de las Partes B/C/D por llenar, respuestas de la Parte E con huecos `___` para los datos, y problemas y soluciones.
+- **Reporte** (`docs/Tarea1/REPORTE.md`, exportado a `REPORTE.pdf` con `herramientas/reporte_pdf.py`):
+  - Ya incluye conexiones, diagrama Mermaid, diseño del PWM, código, la Parte B llena y problemas y soluciones.
+  - Por llenar: tiempos calibrados de la Parte C, la tabla de la Parte D (3 repeticiones), los huecos `___` de la Parte E, fecha, fotos y conclusiones.
+  - Se eligió la ruta mínima: la Parte D con 3 repeticiones, sin la sección de análisis estadístico extra de `calibrar.py`.
 - **Pendientes y decisiones:** `docs/PENDIENTES.md`.
 - **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la batería, barridos y validación.
 
 ### Estado de git
 
+- Después del PR, Fer subió desde la PC de escritorio el arreglo de la cámara, la Parte B, la exportación a PDF y la actualización de CLAUDE.md (commits `d19a491` a `7cecd02`).
 - `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
 - Antes de eso estaba el commit base `d968dd5`: código del kit, cambio de WiFi, docs y pendientes.
 - El firmware estaba originalmente en la raíz como `ESP32_Camera_4WD_Robot_Car_OV3660_V3.ino` y se movió con `git mv`.
