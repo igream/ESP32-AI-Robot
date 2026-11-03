@@ -10,220 +10,16 @@
 #include "driver/ledc.h"
 
 
+#include "robot_motion.h"   // control de motores (antes estaba en este archivo)
 
-#define LEFT_M0     13
-#define LEFT_M1     12
-#define RIGHT_M0    14
-#define RIGHT_M1    15
-int speed = 150;
-int noStop = 0;
-const int freq = 2000;
-const int motorPWMChannnel = 8;
-const int lresolution = 8;
-volatile unsigned int  motor_speed   = 100;
-void robot_setup();
-void robot_stop();
-void robot_fwd();
-void robot_back();
-void robot_left();
-void robot_right();
-volatile unsigned long previous_time = 0;
-volatile unsigned long move_interval = 250;
-unsigned int get_speed(unsigned int sp)
-{
-  return map(sp, 0, 100, 0, 255);
-}
+// 1 = imprime los FPS de cada cuadro del video en el monitor serie
+#define LOG_STREAM 0
 
-void robot_setup()
-// {
-//   ledcSetup(3, 2000, 8); /* 2000 hz PWM, 8-bit resolution and range from 0 to 255 */
-//   ledcSetup(4, 2000, 8); /* 2000 hz PWM, 8-bit resolution and range from 0 to 255 */
-//   ledcSetup(5, 2000, 8); /* 2000 hz PWM, 8-bit resolution and range from 0 to 255 */
-//   ledcSetup(6, 2000, 8); /* 2000 hz PWM, 8-bit resolution and range from 0 to 255 */
-//   ledcAttachPin(LEFT_M0, 3);//IO13
-//   ledcAttachPin(LEFT_M1, 4);//IO12
-//   ledcAttachPin(RIGHT_M0, 5);//IO14
-//   ledcAttachPin(RIGHT_M1, 6);//IO15
-  
-//   pinMode(33, OUTPUT);
-//   robot_stop();  
-// }
-
-{
-  // Configure LEDC timer - Use TIMER_1 to avoid conflicts with camera
-  ledc_timer_config_t ledc_timer = {
-    .speed_mode = LEDC_LOW_SPEED_MODE,
-    .duty_resolution = LEDC_TIMER_8_BIT,  // 8-bit resolution
-    .timer_num = LEDC_TIMER_1,            // Use TIMER_1 to avoid conflicts with camera
-    .freq_hz = 2000,                      // Frequency 2000Hz
-    .clk_cfg = LEDC_AUTO_CLK
-  };
-  ledc_timer_config(&ledc_timer);
-  // Configure 4 channels - Use channels 4-7 to avoid conflicts with camera
-  ledc_channel_config_t ledc_channel[4] = {
-    {
-      .gpio_num = LEFT_M0,
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .channel = LEDC_CHANNEL_4,          // Use channel 4
-      .intr_type = LEDC_INTR_DISABLE,
-      .timer_sel = LEDC_TIMER_1,          // Use TIMER_1
-      .duty = 0,
-      .hpoint = 0
-    },
-    {
-      .gpio_num = LEFT_M1,
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .channel = LEDC_CHANNEL_5,          // Use channel 5
-      .intr_type = LEDC_INTR_DISABLE,
-      .timer_sel = LEDC_TIMER_1,          // Use TIMER_1
-      .duty = 0,
-      .hpoint = 0
-    },
-    {
-      .gpio_num = RIGHT_M0,
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .channel = LEDC_CHANNEL_6,          // Use channel 6
-      .intr_type = LEDC_INTR_DISABLE,
-      .timer_sel = LEDC_TIMER_1,          // Use TIMER_1
-      .duty = 0,
-      .hpoint = 0
-    },
-    {
-      .gpio_num = RIGHT_M1,
-      .speed_mode = LEDC_LOW_SPEED_MODE,
-      .channel = LEDC_CHANNEL_7,          // Use channel 7
-      .intr_type = LEDC_INTR_DISABLE,
-      .timer_sel = LEDC_TIMER_1,          // Use TIMER_1
-      .duty = 0,
-      .hpoint = 0
-    }
-  };
-  
-  for (int i = 0; i < 4; i++) {
-    ledc_channel_config(&ledc_channel[i]);
-  }
-  
-  pinMode(33, OUTPUT);
-  robot_stop();  
-}
-
-// Motor Control Functions
-
-// api2.0版本
-// void update_speed()
-// {  
-//     ledcWrite(motorPWMChannnel, get_speed(motor_speed));
-    
-// }
-
-// void robot_stop()
-// {
-//   ledcWrite(3, 0);
-//   ledcWrite(4, 0);
-//   ledcWrite(5, 0);
-//   ledcWrite(6, 0);
-// }
-
-// void robot_fwd()
-// {
-//   ledcWrite(3, 0);
-//   ledcWrite(4, speed);
-//   ledcWrite(5, 0);
-//   ledcWrite(6, speed);
-// }
-
-// void robot_back()
-// {
-//   ledcWrite(3, speed);
-//   ledcWrite(4, 0);
-//   ledcWrite(5, speed);
-//   ledcWrite(6, 0);
-// }
-
-// void robot_right()
-// {
-//   ledcWrite(3, 0);
-//   ledcWrite(4, speed);
-//   ledcWrite(5, speed);
-//   ledcWrite(6, 0);
-// }
-
-// void robot_left()
-// {
-//   ledcWrite(3, speed);
-//   ledcWrite(4, 0);
-//   ledcWrite(5, 0);
-//   ledcWrite(6, speed);
-// }
-
-// New API
-void robot_stop()
-{
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4, 0);
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, 0);
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6, 0);
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7, 0);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7);
-}
-void robot_fwd()
-{
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4, 0);     // LEFT_M0 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, speed); // LEFT_M1 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6, 0);     // RIGHT_M0 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7, speed); // RIGHT_M1 = speed
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7);
-}
-void robot_back()
-{
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4, speed); // LEFT_M0 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, 0);     // LEFT_M1 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6, speed); // RIGHT_M0 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7, 0);     // RIGHT_M1 = 0
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7);
-}
-void robot_right()
-{
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4, 0);     // LEFT_M0 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, speed); // LEFT_M1 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6, speed); // RIGHT_M0 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7, 0);     // RIGHT_M1 = 0
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7);
-}
-void robot_left()
-{
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4, speed); // LEFT_M0 = speed
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5, 0);     // LEFT_M1 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6, 0);     // RIGHT_M0 = 0
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7, speed); // RIGHT_M1 = speed
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_4);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_5);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_6);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_7);
-}
-void update_speed()
-{  
-  uint32_t duty_value = get_speed(motor_speed);
-  ledc_set_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)motorPWMChannnel, duty_value);
-  ledc_update_duty(LEDC_LOW_SPEED_MODE, (ledc_channel_t)motorPWMChannnel);
-}
 
  extern int gpLed;
 
 extern String WiFiAddr;
 
-void WheelAct(int nLf, int nLb, int nRf, int nRb);
 
 typedef struct {
         size_t size; //number of values used for filtering
@@ -381,7 +177,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
         last_frame = fr_end;
         frame_time /= 1000;
         uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
-        Serial.printf("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)"
+        if (LOG_STREAM) Serial.printf("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)\n"
             ,(uint32_t)(_jpg_buf_len),
             (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
             avg_frame_time, 1000.0 / avg_frame_time
@@ -555,6 +351,15 @@ page += "<p align=center>";
 page += "<button style=background-color:yellow;width:140px;height:40px onmousedown=getsend('ledon')><b>Light ON</b></button>";
 page += "<button style=background-color:yellow;width:140px;height:40px onmousedown=getsend('ledoff')><b>Light OFF</b></button>";
 page += "</p>";
+// Rutinas de la Tarea 1
+page += "<p align=center>";
+page += "<button style=width:110px;height:40px onclick=getsend('seq')><b>Secuencia</b></button>&nbsp;";
+page += "<button style=width:110px;height:40px onclick=getsend('g360')><b>Giro 360</b></button>&nbsp;";
+page += "<button style=width:110px;height:40px onclick=getsend('mot')><b>Prueba motores</b></button>";
+page += "</p>";
+page += "<p align=center style=font-family:monospace;font-size:13px id=estado>...</p>";
+page += "<script>setInterval(function(){var r=new XMLHttpRequest();r.onload=function(){try{var e=JSON.parse(r.responseText);"
+        "document.getElementById('estado').textContent=e.estado+' | '+e.ultimo;}catch(x){}};r.open('GET','estado',true);r.send();},1000);</script>";
 page +="</div>";
 
    return httpd_resp_send(req, &page[0], strlen(&page[0]));
@@ -570,39 +375,29 @@ page +="</div>";
 
 
 static esp_err_t go_handler(httpd_req_t *req){
-    //WheelAct(HIGH, LOW, HIGH, LOW);
-    robot_fwd();
-    Serial.println("Go");
+    robot_continuo(cfg.pwm_avance, cfg.pwm_avance, "Boton adelante");
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
 static esp_err_t back_handler(httpd_req_t *req){
-    //WheelAct(LOW, HIGH, LOW, HIGH);
-    robot_back();
-    Serial.println("Back");
+    robot_continuo(-cfg.pwm_avance, -cfg.pwm_avance, "Boton atras");
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
 
 static esp_err_t left_handler(httpd_req_t *req){
-    //WheelAct(HIGH, LOW, LOW, HIGH);
-    robot_left();
-    Serial.println("Left");
+    robot_continuo(-cfg.pwm_giro, cfg.pwm_giro, "Boton izquierda");
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
 static esp_err_t right_handler(httpd_req_t *req){
-    //WheelAct(LOW, HIGH, HIGH, LOW);
-    robot_right();
-    Serial.println("Right");
+    robot_continuo(cfg.pwm_giro, -cfg.pwm_giro, "Boton derecha");
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
 
 static esp_err_t stop_handler(httpd_req_t *req){
-    //WheelAct(LOW, LOW, LOW, LOW);
     robot_stop();
-    Serial.println("Stop");
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
@@ -620,8 +415,96 @@ static esp_err_t ledoff_handler(httpd_req_t *req){
     return httpd_resp_send(req, "OK", 2);
 }
 
+// =====================================================================
+// Endpoints de calibracion (Tarea 1). Todos responden JSON.
+//   /move?l=IZQ&r=DER&ms=MS   motores por lado durante MS
+//   /seq                      secuencia de la tarea (Parte C)
+//   /mot                      prueba de sentido de motores (Parte B)
+//   /pwmmin?lado=I|D          rampa de PWM minimo;  /pwmmin_ok la marca
+//   /g360                     giro de 360 grados
+//   /cm?d=CM   /grados?a=GRADOS   /ir?x=CM&y=CM   /origen
+//   /estado                   estado actual y pose estimada
+//   /config                   ver configuracion; /config?CLAVE=VALOR la cambia
+// =====================================================================
+static bool query_str(httpd_req_t *req, const char *clave, char *out, size_t len) {
+    char q[200];
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) != ESP_OK) return false;
+    return httpd_query_key_value(q, clave, out, len) == ESP_OK;
+}
+
+static bool query_float(httpd_req_t *req, const char *clave, float *out) {
+    char v[24];
+    if (!query_str(req, clave, v, sizeof(v))) return false;
+    *out = atof(v);
+    return true;
+}
+
+static esp_err_t responder_json(httpd_req_t *req, const String &s) {
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    return httpd_resp_send(req, s.c_str(), s.length());
+}
+
+static esp_err_t responder_ok(httpd_req_t *req, bool ok, const char *error = "") {
+    if (ok) return responder_json(req, "{\"ok\":true}");
+    return responder_json(req, String("{\"ok\":false,\"error\":\"") + error + "\"}");
+}
+
+static esp_err_t move_handler(httpd_req_t *req) {
+    float l, r, ms;
+    if (!query_float(req, "l", &l) || !query_float(req, "r", &r) || !query_float(req, "ms", &ms) || ms <= 0)
+        return responder_ok(req, false, "uso: /move?l=IZQ&r=DER&ms=MS");
+    return responder_ok(req, robot_mover((int)l, (int)r, (uint32_t)ms, "Prueba"), "cola llena");
+}
+
+static esp_err_t seq_handler(httpd_req_t *req)       { return responder_ok(req, robot_secuencia_tarea(), "cola llena"); }
+static esp_err_t mot_handler(httpd_req_t *req)       { return responder_ok(req, robot_prueba_motores(), "cola llena"); }
+static esp_err_t g360_handler(httpd_req_t *req)      { return responder_ok(req, girar360(), "cola llena"); }
+static esp_err_t origen_handler(httpd_req_t *req)    { robot_origen(); return responder_ok(req, true); }
+static esp_err_t estado_handler(httpd_req_t *req)    { return responder_json(req, robot_estado_json()); }
+static esp_err_t pwmmin_ok_handler(httpd_req_t *req) { robot_pwm_min_marcar(); return responder_ok(req, true); }
+
+static esp_err_t pwmmin_handler(httpd_req_t *req) {
+    char lado[4] = {0};
+    query_str(req, "lado", lado, sizeof(lado));
+    char l = toupper(lado[0]);
+    if (l != 'I' && l != 'D') return responder_ok(req, false, "uso: /pwmmin?lado=I|D");
+    return responder_ok(req, robot_pwm_min(l), "cola llena");
+}
+
+static esp_err_t cm_handler(httpd_req_t *req) {
+    float d;
+    if (!query_float(req, "d", &d)) return responder_ok(req, false, "uso: /cm?d=CM");
+    return responder_ok(req, robot_avanzar_cm(d), "falta calibrar v");
+}
+
+static esp_err_t grados_handler(httpd_req_t *req) {
+    float a;
+    if (!query_float(req, "a", &a)) return responder_ok(req, false, "uso: /grados?a=GRADOS");
+    return responder_ok(req, robot_girar_grados(a), "falta calibrar w");
+}
+
+static esp_err_t ir_handler(httpd_req_t *req) {
+    float x, y;
+    if (!query_float(req, "x", &x) || !query_float(req, "y", &y)) return responder_ok(req, false, "uso: /ir?x=CM&y=CM");
+    return responder_ok(req, robot_ir_a(x, y), "falta calibrar v y w");
+}
+
+static esp_err_t config_handler(httpd_req_t *req) {
+    static const char *claves[] = {"pwm", "pwm_giro", "pwm_max", "trim_i", "trim_d", "t_adelante",
+                                   "t_atras", "t90", "t360", "v", "b", "w", "bg"};
+    for (const char *k : claves) {
+        float v;
+        if (query_float(req, k, &v) && !robot_set_param(k, v)) {
+            return responder_ok(req, false, "valor fuera de rango");
+        }
+    }
+    return responder_json(req, robot_config_json());
+}
+
 void startCameraServer(){
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    config.max_uri_handlers = 24;   // el valor por defecto (8) no alcanza
 
     httpd_uri_t go_uri = {
         .uri       = "/go",
@@ -719,6 +602,23 @@ void startCameraServer(){
         httpd_register_uri_handler(camera_httpd, &right_uri);
         httpd_register_uri_handler(camera_httpd, &ledon_uri);
         httpd_register_uri_handler(camera_httpd, &ledoff_uri);
+
+        // Endpoints de calibracion
+        static httpd_uri_t extra[] = {
+            {.uri = "/move",      .method = HTTP_GET, .handler = move_handler,      .user_ctx = NULL},
+            {.uri = "/seq",       .method = HTTP_GET, .handler = seq_handler,       .user_ctx = NULL},
+            {.uri = "/mot",       .method = HTTP_GET, .handler = mot_handler,       .user_ctx = NULL},
+            {.uri = "/pwmmin",    .method = HTTP_GET, .handler = pwmmin_handler,    .user_ctx = NULL},
+            {.uri = "/pwmmin_ok", .method = HTTP_GET, .handler = pwmmin_ok_handler, .user_ctx = NULL},
+            {.uri = "/g360",      .method = HTTP_GET, .handler = g360_handler,      .user_ctx = NULL},
+            {.uri = "/cm",        .method = HTTP_GET, .handler = cm_handler,        .user_ctx = NULL},
+            {.uri = "/grados",    .method = HTTP_GET, .handler = grados_handler,    .user_ctx = NULL},
+            {.uri = "/ir",        .method = HTTP_GET, .handler = ir_handler,        .user_ctx = NULL},
+            {.uri = "/origen",    .method = HTTP_GET, .handler = origen_handler,    .user_ctx = NULL},
+            {.uri = "/estado",    .method = HTTP_GET, .handler = estado_handler,    .user_ctx = NULL},
+            {.uri = "/config",    .method = HTTP_GET, .handler = config_handler,    .user_ctx = NULL},
+        };
+        for (auto &u : extra) httpd_register_uri_handler(camera_httpd, &u);
     }
 
     config.server_port += 1;

@@ -1,6 +1,7 @@
 
 #include "esp_camera.h"
 #include <WiFi.h>
+#include "robot_motion.h"   // movimiento, calibracion y comandos serie
 
 // Select camera model
 //#define CAMERA_MODEL_WROVER_KIT
@@ -9,8 +10,6 @@
 const char* ssid1 = "ESP32Car_Fer";
 const char* password1 = "Fer12345.";  // minimo 8 caracteres (WPA2)
 
-extern void robot_stop();
-extern void robot_setup();
 
 
 
@@ -56,8 +55,8 @@ extern void robot_setup();
 #else
 #error "Camera model not selected"
 #endif
-extern int gpLed =  4; // Light
-extern String WiFiAddr ="";
+int gpLed = 4;           // LED flash (GPIO4)
+String WiFiAddr = "";
 
 void startCameraServer();
 
@@ -84,8 +83,8 @@ void setup() {
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-  config.pin_sscb_sda = SIOD_GPIO_NUM;
-  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_sccb_sda = SIOD_GPIO_NUM;
+  config.pin_sccb_scl = SIOC_GPIO_NUM;
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;
@@ -143,12 +142,13 @@ void setup() {
   Serial.println("' to connect");
   startCameraServer();
   digitalWrite(33,LOW);
+  Serial.println("Escribe 'ayuda' en el monitor serie (115200, Nueva linea) para ver los comandos.");
 
 }
 
-void loop() 
+void loop()
 {
-  
-// put your main code here, to run repeatedly:
-
+  // Ejecuta los movimientos encolados (web o serie) y lee el monitor serie.
+  robot_loop();
+  delay(1);
 }
