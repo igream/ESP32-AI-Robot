@@ -35,7 +35,7 @@ Este plan describe dos aplicaciones, una por asignación, porque cada asignació
 
 # Paso 0 – Preparación común
 
-- [ ] **0.1 [Sonnet] Guardar el trabajo de `/calibrar` que no tiene commit.**
+- [x] **0.1 [Sonnet] Guardar el trabajo de `/calibrar` que no tiene commit.**
   - Archivos: `firmware/robot_esp32cam/calibracion_html.h`, cambios en `app_httpd.cpp`, `herramientas/README.md` y `docs/PENDIENTES.md`.
   - Fer ya probó la página y funciona.
   - Commit también de `docs/Asignaciones/Tarea_ESP32CAM_EdgeImpulse.docx`.

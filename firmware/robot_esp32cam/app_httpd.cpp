@@ -11,6 +11,7 @@
 
 
 #include "robot_motion.h"   // control de motores (antes estaba en este archivo)
+#include "calibracion_html.h"   // pagina /calibrar
 
 // 1 = imprime los FPS de cada cuadro del video en el monitor serie
 #define LOG_STREAM 0
@@ -355,7 +356,8 @@ page += "</p>";
 page += "<p align=center>";
 page += "<button style=width:110px;height:40px onclick=getsend('seq')><b>Secuencia</b></button>&nbsp;";
 page += "<button style=width:110px;height:40px onclick=getsend('g360')><b>Giro 360</b></button>&nbsp;";
-page += "<button style=width:110px;height:40px onclick=getsend('mot')><b>Prueba motores</b></button>";
+page += "<button style=width:110px;height:40px onclick=getsend('mot')><b>Prueba motores</b></button>&nbsp;";
+page += "<button style=width:110px;height:40px onclick=\"location='calibrar'\"><b>Calibrar</b></button>";
 page += "</p>";
 page += "<p align=center style=font-family:monospace;font-size:13px id=estado>...</p>";
 page += "<script>setInterval(function(){var r=new XMLHttpRequest();r.onload=function(){try{var e=JSON.parse(r.responseText);"
@@ -457,6 +459,10 @@ static esp_err_t move_handler(httpd_req_t *req) {
     return responder_ok(req, robot_mover((int)l, (int)r, (uint32_t)ms, "Prueba"), "cola llena");
 }
 
+static esp_err_t calibrar_handler(httpd_req_t *req) {
+    httpd_resp_set_type(req, "text/html; charset=utf-8");
+    return httpd_resp_send(req, CALIBRAR_HTML, HTTPD_RESP_USE_STRLEN);
+}
 static esp_err_t seq_handler(httpd_req_t *req)       { return responder_ok(req, robot_secuencia_tarea(), "cola llena"); }
 static esp_err_t mot_handler(httpd_req_t *req)       { return responder_ok(req, robot_prueba_motores(), "cola llena"); }
 static esp_err_t g360_handler(httpd_req_t *req)      { return responder_ok(req, girar360(), "cola llena"); }
@@ -606,6 +612,7 @@ void startCameraServer(){
         // Endpoints de calibracion
         static httpd_uri_t extra[] = {
             {.uri = "/move",      .method = HTTP_GET, .handler = move_handler,      .user_ctx = NULL},
+            {.uri = "/calibrar",  .method = HTTP_GET, .handler = calibrar_handler,  .user_ctx = NULL},
             {.uri = "/seq",       .method = HTTP_GET, .handler = seq_handler,       .user_ctx = NULL},
             {.uri = "/mot",       .method = HTTP_GET, .handler = mot_handler,       .user_ctx = NULL},
             {.uri = "/pwmmin",    .method = HTTP_GET, .handler = pwmmin_handler,    .user_ctx = NULL},

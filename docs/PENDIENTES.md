@@ -57,5 +57,6 @@ Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y
 - [x] Script de PC para registrar pruebas y calcular estadística (`herramientas/calibrar.py`), probado con datos simulados.
 - [x] Borrador del reporte (`docs/Tarea1/REPORTE.md`).
 - [x] Subir el firmware al robot y probarlo con las ruedas en el aire (sentido de motores y PWM mínimo, Parte B).
+- [x] Página `/calibrar` en el robot (captura de mediciones desde el celular, exporta CSV). Subida al robot y probada por Fer (2026-11-06); evoluciona a `/tarea1` (ver `docs/PLAN_IMPLEMENTACION.md`).
 - [ ] Mediciones: barridos, pruebas de comparación y validación por coordenadas.
 - [ ] Llenar las tablas del reporte, fotos, diagrama dibujado, video y exportar a PDF.

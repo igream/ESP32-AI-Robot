@@ -19,6 +19,14 @@ Cada vez que abras una terminal nueva, activa el entorno para que `python` tenga
 
 Luego conecta la PC al WiFi **ESP32Car_Fer** (contraseña `Fer12345.`). El robot está en `192.168.4.1`.
 
+## Captura desde el celular (página `/calibrar`)
+
+Conecta el celular al WiFi `ESP32Car_Fer` y abre `http://192.168.4.1/calibrar` (o el botón **Calibrar** de la página principal).
+Eliges el movimiento, la duración y el PWM, pulsas **Ejecutar**, y la página pide la medición y la guarda en el navegador
+con las mismas columnas que `calibrar.py`. Muestra un resumen (n, media, DE) por movimiento y duración.
+Al terminar, **Descargar CSV** (o **Ver / copiar CSV**), guárdalo como `herramientas/datos/pruebas.csv` y corre `python calibrar.py analizar`.
+Los datos viven en el navegador del celular: descarga el CSV antes de borrar datos del navegador.
+
 ## Protocolo de medición sugerido
 
 Material: cinta métrica, cinta de color en el piso (línea de 1 m y una cruz de ángulos) y multímetro para la batería.
