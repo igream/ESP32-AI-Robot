@@ -12,4 +12,4 @@ __pycache__/
 .venv/
 
 # Reporte
-docs/Tarea1/_reporte.html
+docs/*/_reporte.html

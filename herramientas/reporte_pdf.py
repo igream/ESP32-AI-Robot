@@ -1,11 +1,12 @@
-"""Convierte docs/Tarea1/REPORTE.md a PDF con Microsoft Edge o Google Chrome (sin instalar nada).
+"""Convierte un reporte en Markdown a PDF con Microsoft Edge o Google Chrome (sin instalar nada).
 
-Uso:  python herramientas/reporte_pdf.py
-Salida: docs/Tarea1/REPORTE.pdf
+Uso:  python herramientas/reporte_pdf.py [ruta/al/REPORTE.md]
+Sin argumento usa docs/Tarea1/REPORTE.md.
+Salida: el mismo nombre con extension .pdf, junto al .md.
 
 El Markdown y el diagrama Mermaid se dibujan en el navegador (marked y mermaid
 desde jsdelivr), así que hace falta internet. Las imágenes con ruta relativa
-se toman desde docs/Tarea1/.
+se toman desde la carpeta del .md.
 """
 import json
 import pathlib
@@ -13,9 +14,7 @@ import subprocess
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-MD = RAIZ / "docs" / "Tarea1" / "REPORTE.md"
-HTML = MD.with_name("_reporte.html")
-PDF = MD.with_suffix(".pdf")
+MD_DEFECTO = RAIZ / "docs" / "Tarea1" / "REPORTE.md"
 # Edge o Chrome: los dos aceptan las mismas opciones de impresión headless.
 EDGE = [
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
@@ -25,7 +24,7 @@ EDGE = [
 ]
 
 PLANTILLA = """<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><title>Reporte Tarea 1</title>
+<html lang="es"><head><meta charset="utf-8"><title>Reporte</title>
 <style>
   @page { size: Letter; margin: 2cm 1.8cm; }
   body { font-family: "Segoe UI", Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #111; }
@@ -52,17 +51,24 @@ PLANTILLA = """<!doctype html>
 
 
 def main():
+    md = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else MD_DEFECTO
+    if not md.is_file():
+        sys.exit(f"No existe {md}")
+    html = md.with_name("_reporte.html")
+    pdf = md.with_suffix(".pdf")
     edge = next((e for e in EDGE if pathlib.Path(e).exists()), None)
     if not edge:
         sys.exit("No se encontró Microsoft Edge ni Google Chrome.")
-    texto = MD.read_text(encoding="utf-8")
-    HTML.write_text(PLANTILLA.replace("__MD__", json.dumps(texto)), encoding="utf-8")
-    subprocess.run([
-        edge, "--headless", "--disable-gpu", "--no-pdf-header-footer",
-        "--virtual-time-budget=15000", f"--print-to-pdf={PDF}", HTML.as_uri(),
-    ], check=True, capture_output=True)
-    HTML.unlink()
-    print(f"PDF: {PDF}")
+    texto = md.read_text(encoding="utf-8")
+    html.write_text(PLANTILLA.replace("__MD__", json.dumps(texto)), encoding="utf-8")
+    try:
+        subprocess.run([
+            edge, "--headless", "--disable-gpu", "--no-pdf-header-footer",
+            "--virtual-time-budget=15000", f"--print-to-pdf={pdf}", html.as_uri(),
+        ], check=True, capture_output=True)
+    finally:
+        html.unlink(missing_ok=True)
+    print(f"PDF: {pdf}")
 
 
 if __name__ == "__main__":

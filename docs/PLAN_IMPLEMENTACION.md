@@ -40,7 +40,7 @@ Este plan describe dos aplicaciones, una por asignación, porque cada asignació
   - Fer ya probó la página y funciona.
   - Commit también de `docs/Asignaciones/Tarea_ESP32CAM_EdgeImpulse.docx`.
   - *Terminado:* `git status` limpio y push a `origin/main`.
-- [ ] **0.2 [Sonnet] Generalizar `herramientas/reporte_pdf.py`** para que reciba la ruta del Markdown como argumento.
+- [x] **0.2 [Sonnet] Generalizar `herramientas/reporte_pdf.py`** para que reciba la ruta del Markdown como argumento.
   - Uso: `python herramientas/reporte_pdf.py docs/Tarea2/REPORTE.md`.
   - Sin argumento, debe seguir generando el de la Tarea 1.
   - El HTML temporal se crea junto al `.md` y se borra al final.
