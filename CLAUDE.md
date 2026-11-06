@@ -18,6 +18,17 @@ Fer reparte el trabajo entre dos chats de Claude Code sobre el mismo repositorio
 
 Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial de git. No comparten conversación, así que las decisiones importantes quedan escritas aquí o en los mensajes de commit.
 
+**Plan vigente:** `docs/PLAN_IMPLEMENTACION.md` (2026-11-06).
+- Contiene la app web `/tarea1` en el robot para la Tarea 1 y la app de PC `herramientas/tarea2/` para la Tarea 2 (Edge Impulse).
+- Cada app avanza por etapas con dependencias y puntos de control, y los pasos están marcados [Sonnet], [Opus] o [Fer].
+- Decisiones del 2026-11-06:
+  - Primero la Tarea 1.
+  - Una sola versión del core ESP32, la más reciente que funcione con Edge Impulse (se prueba 3.3.12; si falla, 3.0.7).
+  - Sin OLED.
+  - Dataset capturado desde la PC por WiFi, sin Eloquent.
+  - Subida con Edge Impulse CLI.
+  - Datos de la Tarea 1 guardados en LittleFS del robot.
+
 ## Objetivos del curso (en orden)
 
 1. Movimientos definidos por coordenadas: saber de forma precisa cuánto se mueve el robot (calibración). **Etapa actual.**
