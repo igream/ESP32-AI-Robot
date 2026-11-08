@@ -27,9 +27,13 @@
 #include "img_converters.h"
 #include "modelo_ei.h"                              // librería de Edge Impulse (ver ese archivo)
 #include "edge-impulse-sdk/dsp/image/image.hpp"
+#include "driver/ledc.h"
 
 // ---------------- Configuración ----------------
 #define UMBRAL            0.50f   // probabilidad mínima para reportar y para encender el flash
+// El destello se DESACTIVA por defecto: ilumina el cuadro siguiente (el flash no se usó en el dataset)
+// y calienta el LED. Poner 1 solo para una demostración sin computadora.
+#define USAR_FLASH        0
 #define FLASH_MS          200     // duración del destello del LED flash
 #define PIN_FLASH         4       // LED flash (activo en alto)
 #define PIN_LED_ROJO      33      // LED rojo de la placa (activo en bajo)
@@ -63,7 +67,9 @@ static unsigned long apagar_flash_en = 0;
 static int obtener_datos(size_t desplazamiento, size_t largo, float *salida) {
   size_t px = desplazamiento * 3;
   for (size_t i = 0; i < largo; i++, px += 3) {
-    salida[i] = (bufer_img[px + 2] << 16) + (bufer_img[px + 1] << 8) + bufer_img[px];
+    // En este core (3.3.x) fmt2rgb888 deja los bytes en orden R,G,B (verificado con el volcado 'i':
+    // un vaso rojo salía azul con el orden B,G,R del ejemplo de Edge Impulse).
+    salida[i] = (bufer_img[px] << 16) + (bufer_img[px + 1] << 8) + bufer_img[px + 2];
   }
   return 0;
 }
@@ -110,6 +116,92 @@ static bool capturar_cuadro() {
   return true;
 }
 
+// ---------------- Gestos al detectar (movimientos cortos con los motores) ----------------
+// Pines del L298N (igual que firmware/robot_esp32cam): izquierdo 13 reversa / 12 adelante, derecho 14 reversa / 15 adelante.
+// El PWM va por LEDC (canales 4-7, timer 1; la cámara usa el canal 0 y el timer 0). Con 12 V NO se debe usar
+// encendido total: los motores TT son de ~6 V, por eso el PWM se limita a PWM_GESTO.
+#define USAR_GESTOS       1       // 0 = el sketch solo detecta (sin mover el robot)
+#define PWM_GESTO         140     // 0-255, como pwm_max del robot
+#define PAUSA_GESTO_MS    3000    // tras un gesto se ignoran las detecciones (el movimiento cambia la imagen)
+
+static const ledc_channel_t CH_IZQ_REV = LEDC_CHANNEL_4;
+static const ledc_channel_t CH_IZQ_ADE = LEDC_CHANNEL_5;
+static const ledc_channel_t CH_DER_REV = LEDC_CHANNEL_6;
+static const ledc_channel_t CH_DER_ADE = LEDC_CHANNEL_7;
+static bool gestos_activos = USAR_GESTOS;
+static unsigned long ignorar_hasta = 0;
+static char historial[3][24] = {"", "", ""};   // clase dominante de los últimos 3 cuadros
+
+static void configurar_motores() {
+  ledc_timer_config_t timer = {};
+  timer.speed_mode = LEDC_LOW_SPEED_MODE;
+  timer.duty_resolution = LEDC_TIMER_8_BIT;
+  timer.timer_num = LEDC_TIMER_1;
+  timer.freq_hz = 2000;
+  timer.clk_cfg = LEDC_AUTO_CLK;
+  ledc_timer_config(&timer);
+  const struct { int gpio; ledc_channel_t canal; } m[] = {{13, CH_IZQ_REV}, {12, CH_IZQ_ADE}, {14, CH_DER_REV}, {15, CH_DER_ADE}};
+  for (auto &x : m) {
+    ledc_channel_config_t c = {};
+    c.gpio_num = x.gpio;
+    c.speed_mode = LEDC_LOW_SPEED_MODE;
+    c.channel = x.canal;
+    c.intr_type = LEDC_INTR_DISABLE;
+    c.timer_sel = LEDC_TIMER_1;
+    c.duty = 0;
+    c.hpoint = 0;
+    ledc_channel_config(&c);
+  }
+}
+
+static void lado(ledc_channel_t ade, ledc_channel_t rev, int v) {   // v > 0 adelante, < 0 reversa
+  ledc_set_duty(LEDC_LOW_SPEED_MODE, v >= 0 ? rev : ade, 0);
+  ledc_update_duty(LEDC_LOW_SPEED_MODE, v >= 0 ? rev : ade);
+  ledc_set_duty(LEDC_LOW_SPEED_MODE, v >= 0 ? ade : rev, v >= 0 ? v : -v);
+  ledc_update_duty(LEDC_LOW_SPEED_MODE, v >= 0 ? ade : rev);
+}
+
+static void mover(int izq, int der, int ms) {                       // movimiento con duración y parada
+  lado(CH_IZQ_ADE, CH_IZQ_REV, izq);
+  lado(CH_DER_ADE, CH_DER_REV, der);
+  delay(ms);
+  lado(CH_IZQ_ADE, CH_IZQ_REV, 0);
+  lado(CH_DER_ADE, CH_DER_REV, 0);
+  delay(150);
+}
+
+static void hacer_gesto(const char *clase) {
+  const int P = PWM_GESTO;
+  if (strcmp(clase, "vasorojo") == 0) {            // asentir ("sí"): adelante y atrás, dos veces
+    for (int i = 0; i < 2; i++) { mover(P, P, 300); mover(-P, -P, 300); }
+  } else if (strcmp(clase, "jarraroja") == 0) {    // negar ("no"): giro izquierda, derecha, izquierda
+    mover(-P, P, 250); mover(P, -P, 500); mover(-P, P, 250);
+  } else if (strcmp(clase, "laptop") == 0) {       // celebración: una vuelta en el sitio (tiempo fijo, sin calibrar)
+    mover(-P, P, 1800);
+  }
+}
+
+// Confirmación 2 de 3: solo se hace el gesto si la misma clase domina en al menos 2 de los últimos 3 cuadros.
+static void actualizar_gestos(const char *mejor) {
+  if (!gestos_activos) return;
+  if (millis() < ignorar_hasta) {
+    for (auto &h : historial) h[0] = 0;
+    return;
+  }
+  strcpy(historial[0], historial[1]);
+  strcpy(historial[1], historial[2]);
+  strncpy(historial[2], mejor ? mejor : "", sizeof(historial[2]) - 1);
+  historial[2][sizeof(historial[2]) - 1] = 0;
+  if (!mejor) return;
+  int veces = 0;
+  for (auto &h : historial) veces += strcmp(h, mejor) == 0;
+  if (veces < 2) return;
+  Serial.printf("GESTO;%lu;%s\n", millis(), mejor);
+  hacer_gesto(mejor);
+  for (auto &h : historial) h[0] = 0;
+  ignorar_hasta = millis() + PAUSA_GESTO_MS;
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -133,6 +225,8 @@ void setup() {
     while (true) delay(1000);
   }
 
+  configurar_motores();                   // después de la cámara: los motores quedan en duty 0 (pines en bajo)
+
   Serial.printf("INFO;modelo=%s;entrada=%dx%d;umbral=%.2f;core=%d.%d.%d\n",
                 EI_CLASSIFIER_PROJECT_NAME, EI_CLASSIFIER_INPUT_WIDTH, EI_CLASSIFIER_INPUT_HEIGHT, UMBRAL,
                 ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH);
@@ -150,6 +244,22 @@ void loop() {
     return;
   }
 
+  // Depuración: al recibir 'i' por el serie vuelca la imagen exacta que ve el modelo (RGB, hex).
+  // 'g' activa o desactiva los gestos (útil durante las 45 pruebas para que el robot no se mueva).
+  if (Serial.available()) {
+    char c = Serial.read();
+    if (c == 'i') {
+      Serial.printf("IMG;%d;%d;", EI_CLASSIFIER_INPUT_WIDTH, EI_CLASSIFIER_INPUT_HEIGHT);
+      for (int i = 0; i < EI_CLASSIFIER_INPUT_WIDTH * EI_CLASSIFIER_INPUT_HEIGHT; i++) {
+        Serial.printf("%02x%02x%02x", bufer_img[i * 3], bufer_img[i * 3 + 1], bufer_img[i * 3 + 2]);
+      }
+      Serial.println();
+    } else if (c == 'g') {
+      gestos_activos = !gestos_activos;
+      Serial.printf("GESTOS;%s\n", gestos_activos ? "on" : "off");
+    }
+  }
+
   ei::signal_t senal;
   senal.total_length = EI_CLASSIFIER_INPUT_WIDTH * EI_CLASSIFIER_INPUT_HEIGHT;
   senal.get_data = &obtener_datos;
@@ -161,6 +271,8 @@ void loop() {
 
   unsigned long t = millis();
   int n = 0;
+  const char *mejor = nullptr;            // clase con mayor probabilidad en este cuadro
+  float mejor_p = 0;
 #if EI_CLASSIFIER_OBJECT_DETECTION == 1
   for (uint32_t i = 0; i < r.bounding_boxes_count; i++) {
     auto bb = r.bounding_boxes[i];
@@ -169,12 +281,17 @@ void loop() {
                   bb.label, bb.value, (unsigned)(bb.x + bb.width / 2), (unsigned)(bb.y + bb.height / 2),
                   (unsigned)bb.width, (unsigned)bb.height);
     n++;
+    if (bb.value > mejor_p) { mejor_p = bb.value; mejor = bb.label; }
   }
 #endif
   if (n == 0) {
     Serial.printf("NONE;%lu;%d;%d\n", t, (int)r.timing.dsp, (int)r.timing.classification);
-  } else {
+  }
+#if USAR_FLASH
+  else {
     digitalWrite(PIN_FLASH, HIGH);        // destello: hubo detección
     apagar_flash_en = millis() + FLASH_MS;
   }
+#endif
+  actualizar_gestos(mejor);
 }

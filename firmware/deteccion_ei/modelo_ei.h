@@ -6,4 +6,4 @@
 // Include library -> Add .ZIP library), cambia SOLO la línea siguiente por el
 // nombre real. Lo puedes ver en Arduino IDE: Archivo -> Ejemplos -> <tu proyecto>.
 #pragma once
-#include <NOMBRE_DEL_PROYECTO_inferencing.h>
+#include <Tarea2_Objetos_inferencing.h>
