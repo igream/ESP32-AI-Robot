@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Captura del dataset</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#111;color:#eee;touch-action:manipulation}
+main{max-width:520px;margin:auto;padding:8px 10px 30px}
+#visor{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:8px;overflow:hidden}
+#visor img{width:100%;height:100%;display:block}
+/* recorte central que ve el modelo: 240 de 320 px de ancho */
+#guia{position:absolute;left:12.5%;width:75%;top:0;bottom:0;border-left:2px dashed #fc6;border-right:2px dashed #fc6;pointer-events:none}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+#objs{display:flex;gap:6px;margin:8px 0}
+#objs button{flex:1;margin:0;padding:10px 4px;font-size:15px;background:#2a2a2a;border:2px solid transparent}
+#objs button.sel{border-color:#9cf;background:#234}
+#objs small{display:block;font-size:12px;color:#bbb}
+#objs .ok small{color:#6d6}
+button{font-size:17px;padding:12px;border:0;border-radius:8px;margin-top:8px;width:100%;color:#fff;background:#357}
+#tomar{font-size:26px;padding:26px;background:#2a7a3a}
+#tomar:disabled{opacity:.4}
+button.gris{background:#444;font-size:14px;padding:9px}
+.fila{display:flex;gap:8px;align-items:center}.fila>*{flex:1}
+input[type=number]{width:70px;flex:none;font-size:17px;padding:8px;border-radius:6px;border:1px solid #444;background:#222;color:#fff}
+#msg{min-height:20px;margin-top:8px;font-size:14px;color:#fc6}
+#ult{height:60px;border-radius:4px;vertical-align:middle;margin-left:8px;display:none}
+.peq{font-size:12px;color:#999}
+</style></head><body><main>
+<div id="visor"><img id="vista" alt="vista previa"><div id="guia"></div><div id="flash"></div></div>
+<div class="peq">Las líneas amarillas marcan el recorte que ve el modelo (lo de fuera no cuenta).</div>
+<div id="objs"></div>
+<button id="tomar" onclick="foto()">TOMAR FOTO</button>
+<div class="fila">
+ <label class="peq" style="flex:none"><input type="checkbox" id="auto"> Automático cada</label>
+ <input type="number" id="seg" value="2" min="1" step="0.5"><span class="peq" style="flex:none">s</span>
+ <button class="gris" style="margin:0" onclick="deshacer()">Deshacer última</button>
+</div>
+<div id="msg"></div><div class="peq" id="info"></div><img id="ult">
+<script>
+var objs=[],sel=null,meta=60,min=50,ocupado=false,timer=null;
+function $(i){return document.getElementById(i)}
+function msg(t){$("msg").textContent=t}
+async function api(p,m){var r=await fetch(p,{method:m||"GET"});return r.json()}
+function pinta(){
+ var h="";
+ objs.forEach(function(o){
+  h+="<button class='"+(o.nombre===sel?"sel ":"")+(o.n>=min?"ok":"")+"' onclick=\"elegir('"+o.nombre+"')\">"+o.nombre+"<small>"+o.n+" / "+meta+(o.n>=min?" ✓":"")+"</small></button>";
+ });
+ $("objs").innerHTML=h;
+}
+async function estado(){
+ var e=await api("/api/estado");objs=e.objetos;meta=e.meta;min=e.min;
+ if(!sel&&objs.length)sel=objs[0].nombre;
+ pinta();
+}
+function elegir(n){sel=n;pinta();msg("Objeto: "+n+". Cambia el objeto en la mesa y toma fotos.")}
+async function foto(){
+ if(ocupado||!sel)return;
+ ocupado=true;$("tomar").disabled=true;
+ try{
+  var r=await api("/api/foto?objeto="+sel,"POST");
+  if(r.ok){
+   $("flash").style.opacity=.8;setTimeout(function(){$("flash").style.opacity=0},120);
+   if(navigator.vibrate)navigator.vibrate(40);
+   msg("✓ "+r.archivo+" ("+r.n+")");
+   $("ult").style.display="inline";$("ult").src="/api/ultima?objeto="+sel+"&_="+Date.now();
+  }else{msg("✗ "+r.error);if(navigator.vibrate)navigator.vibrate([100,60,100]);$("auto").checked=false}
+  await estado();
+  var o=objs.filter(function(x){return x.nombre===sel})[0];
+  if(o&&o.n>=meta&&$("auto").checked){$("auto").checked=false;msg("Meta de "+meta+" alcanzada para "+sel+". Cambia de objeto.")}
+ }catch(e){msg("✗ Sin conexión con la PC");$("auto").checked=false}
+ ocupado=false;$("tomar").disabled=false;
+}
+async function deshacer(){
+ if(!sel||!confirm("¿Borrar la última foto de "+sel+"?"))return;
+ var r=await api("/api/deshacer?objeto="+sel,"POST");
+ msg(r.ok?"Borrada "+r.archivo:"✗ "+r.error);$("ult").style.display="none";await estado();
+}
+function bucle(){
+ if($("auto").checked&&!ocupado)foto();
+ timer=setTimeout(bucle,Math.max(1,parseFloat($("seg").value)||2)*1000);
+}
+// vista previa: pide el siguiente cuadro al robot cuando termina el anterior
+function previa(){
+ var im=$("vista");
+ im.onload=function(){setTimeout(previa,350)};
+ im.onerror=function(){setTimeout(previa,1500)};
+ im.src="http://192.168.4.1/capture?_="+Date.now();
+}
+estado().then(function(){msg("Elige el objeto y toma fotos.")}).catch(function(){msg("✗ No hablo con la PC")});
+previa();bucle();
+</script></main></body></html>

@@ -6,6 +6,7 @@ Subcomandos (una etapa cada uno, ver docs/PLAN_IMPLEMENTACION.md):
     preparar        verifica dependencias, Edge Impulse CLI, el robot y arduino-cli   (T2.0)
     condiciones     guarda las condiciones del experimento y los 3 objetos            (T2.1)
     capturar        toma fotos del robot por WiFi (GET /capture) para el dataset      (T2.2)
+    servir          pagina para el celular: vista previa y boton de foto              (T2.2)
     subir           sube el dataset con edge-impulse-uploader                          (T2.3)
     entrenamiento   registra la corrida 1 o 2 de Edge Impulse                         (T2.4)
     marcar          marca a mano una etapa hecha fuera de la app (etiquetado, despliegue)
@@ -23,6 +24,7 @@ import random
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 from datetime import datetime
@@ -238,6 +240,70 @@ def cmd_condiciones(a):
 
 
 # ---------------------------------------------------------------- T2.2 capturar
+RES_ESPERADA = (320, 240)
+CANDADO_FOTO = threading.Lock()
+
+
+def indice_foto(nombre):
+    """Numero de una foto 'objeto_NNN.jpg' (0 si no tiene)."""
+    try:
+        return int(Path(nombre).stem.rsplit("_", 1)[1])
+    except (IndexError, ValueError):
+        return 0
+
+
+def ultima_foto(obj):
+    fotos = sorted((ruta("dataset") / obj).glob("*.jpg"), key=lambda f: indice_foto(f.name))
+    return fotos[-1] if fotos else None
+
+
+def guardar_foto(obj):
+    """Pide una foto al robot y la guarda. Devuelve dict con ok y datos o error."""
+    with CANDADO_FOTO:
+        if obj not in objetos():
+            return {"ok": False, "error": f"objeto desconocido: {obj}"}
+        try:
+            d = pedir_jpeg(ROBOT + "/capture")
+        except Exception as ex:
+            return {"ok": False, "error": f"el robot no responde ({ex})"}
+        res = resolucion_jpeg(d)
+        if not res or len(d) < 1000:
+            return {"ok": False, "error": f"foto vacia o invalida ({len(d)} B)"}
+        if res != RES_ESPERADA:
+            return {"ok": False, "error": f"resolucion {res[0]}x{res[1]} distinta de {RES_ESPERADA[0]}x{RES_ESPERADA[1]}"}
+        carpeta = ruta("dataset") / obj
+        carpeta.mkdir(parents=True, exist_ok=True)
+        ult = ultima_foto(obj)
+        k = (indice_foto(ult.name) if ult else 0) + 1
+        nombre = f"{obj}_{k:03d}.jpg"
+        (carpeta / nombre).write_bytes(d)
+        csv_ruta = ruta("dataset/capturas.csv")
+        nuevo = not csv_ruta.exists()
+        with open(csv_ruta, "a", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            if nuevo:
+                w.writerow(["archivo", "objeto", "fecha", "bytes", "resolucion"])
+            w.writerow([f"{obj}/{nombre}", obj, datetime.now().isoformat(timespec="seconds"), len(d), f"{res[0]}x{res[1]}"])
+        return {"ok": True, "archivo": nombre, "n": contar_fotos(obj), "bytes": len(d), "res": f"{res[0]}x{res[1]}"}
+
+
+def deshacer_foto(obj):
+    """Borra la ultima foto del objeto y su fila de capturas.csv."""
+    with CANDADO_FOTO:
+        f = ultima_foto(obj) if obj in objetos() else None
+        if not f:
+            return {"ok": False, "error": "no hay fotos que borrar"}
+        rel = f"{obj}/{f.name}"
+        f.unlink()
+        csv_ruta = ruta("dataset/capturas.csv")
+        if csv_ruta.exists():
+            with open(csv_ruta, encoding="utf-8", newline="") as fh:
+                filas = list(csv.reader(fh))
+            with open(csv_ruta, "w", encoding="utf-8", newline="") as fh:
+                csv.writer(fh).writerows([r for r in filas if not r or r[0] != rel])
+        return {"ok": True, "archivo": f.name, "n": contar_fotos(obj)}
+
+
 def cmd_capturar(a):
     c = leer_json("condiciones.json")
     if not c:
@@ -245,48 +311,91 @@ def cmd_capturar(a):
     if a.objeto not in objetos():
         sys.exit(f"'{a.objeto}' no esta en condiciones.json ({', '.join(objetos())}).")
     print(f"Condiciones: camara a {c['altura_camara_cm']} cm, punto a {c['distancia_punto_cm']} cm, fondo: {c['fondo']}, luz: {c['iluminacion']}, flash: {'si' if c['flash'] else 'no'}.")
-    carpeta = ruta("dataset") / a.objeto
-    carpeta.mkdir(parents=True, exist_ok=True)
-    nuevo = not ruta("dataset/capturas.csv").exists()
-    existentes = contar_fotos(a.objeto)
-    print(f"{a.objeto}: {existentes} fotos. Meta: {a.n}. Modo {'automatico cada ' + str(a.auto) + ' s' if a.auto else 'manual (Enter = foto, q = salir)'}.")
-    res_base = None
-    with open(ruta("dataset/capturas.csv"), "a", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        if nuevo:
-            w.writerow(["archivo", "objeto", "fecha", "bytes", "resolucion"])
-        k = existentes
-        fallos = 0
-        while k < a.n:
-            if a.auto:
-                time.sleep(a.auto)
-            elif input(f"[{k + 1}/{a.n}] Enter para foto (q sale): ").strip().lower() == "q":
-                break
-            try:
-                d = pedir_jpeg(ROBOT + "/capture")
-            except Exception as ex:
-                fallos += 1
-                print(f"  Error de red ({fallos}/5): {ex}")
-                if fallos >= 5:
-                    print("  Demasiados errores seguidos: revisa el WiFi y el robot.")
-                    break
-                continue
+    print(f"{a.objeto}: {contar_fotos(a.objeto)} fotos. Meta: {a.n}. Modo {'automatico cada ' + str(a.auto) + ' s' if a.auto else 'manual (Enter = foto, q = salir)'}.")
+    fallos = 0
+    while contar_fotos(a.objeto) < a.n:
+        if a.auto:
+            time.sleep(a.auto)
+        elif input(f"[{contar_fotos(a.objeto) + 1}/{a.n}] Enter para foto (q sale): ").strip().lower() == "q":
+            break
+        r = guardar_foto(a.objeto)
+        if r["ok"]:
             fallos = 0
-            res = resolucion_jpeg(d)
-            if not res or len(d) < 1000:
-                print(f"  Foto vacia o invalida ({len(d)} B); se descarta.")
-                continue
-            res_base = res_base or res
-            if res != res_base:
-                print(f"  AVISO: resolucion {res[0]}x{res[1]} distinta de {res_base[0]}x{res_base[1]}; se descarta.")
-                continue
-            k += 1
-            nombre = f"{a.objeto}_{k:03d}.jpg"
-            (carpeta / nombre).write_bytes(d)
-            w.writerow([f"{a.objeto}/{nombre}", a.objeto, datetime.now().isoformat(timespec="seconds"), len(d), f"{res[0]}x{res[1]}"])
-            f.flush()
-            print(f"  {k}/{a.n} {nombre} {res[0]}x{res[1]} {len(d)} B")
+            print(f"  {r['n']}/{a.n} {r['archivo']} {r['res']} {r['bytes']} B")
+        else:
+            fallos += 1
+            print(f"  Error ({fallos}/5): {r['error']}")
+            if fallos >= 5:
+                print("  Demasiados errores seguidos: revisa el WiFi y el robot.")
+                break
     print(f"{a.objeto}: {contar_fotos(a.objeto)} fotos.")
+
+
+# ---------------------------------------------------------------- servir (captura desde el celular)
+def ip_local():
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("192.168.4.1", 9))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "IP-DE-LA-PC"
+
+
+def cmd_servir(a):
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse, parse_qs
+    if not objetos():
+        sys.exit("Falta condiciones.json: corre primero 'condiciones'.")
+    pagina = (AQUI / "captura_movil.html").read_bytes()
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def enviar(self, codigo, tipo, cuerpo):
+            self.send_response(codigo)
+            self.send_header("Content-Type", tipo)
+            self.send_header("Content-Length", str(len(cuerpo)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(cuerpo)
+
+        def json(self, obj, codigo=200):
+            self.enviar(codigo, "application/json", json.dumps(obj, ensure_ascii=False).encode("utf-8"))
+
+        def atender(self, metodo):
+            u = urlparse(self.path)
+            q = parse_qs(u.query)
+            obj = (q.get("objeto") or [""])[0]
+            if metodo == "GET" and u.path == "/":
+                return self.enviar(200, "text/html; charset=utf-8", pagina)
+            if metodo == "GET" and u.path == "/api/estado":
+                return self.json({"objetos": [{"nombre": o, "n": contar_fotos(o)} for o in objetos()], "meta": a.meta, "min": MIN_FOTOS})
+            if metodo == "GET" and u.path == "/api/ultima":
+                f = ultima_foto(obj) if obj in objetos() else None
+                return self.enviar(200, "image/jpeg", f.read_bytes()) if f else self.json({"ok": False}, 404)
+            if metodo == "POST" and u.path == "/api/foto":
+                return self.json(guardar_foto(obj))
+            if metodo == "POST" and u.path == "/api/deshacer":
+                return self.json(deshacer_foto(obj))
+            self.json({"ok": False, "error": "no encontrado"}, 404)
+
+        def do_GET(self):
+            self.atender("GET")
+
+        def do_POST(self):
+            self.atender("POST")
+
+    srv = ThreadingHTTPServer(("0.0.0.0", a.puerto), H)
+    print(f"Captura desde el celular. Conecta el celular al WiFi ESP32Car_Fer y abre:\n\n    http://{ip_local()}:{a.puerto}\n")
+    print("(Si Windows pregunta por el firewall, permite Python en redes privadas.)  Ctrl+C para terminar.")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nServidor detenido.")
 
 
 # ---------------------------------------------------------------- T2.3 subir
@@ -643,6 +752,10 @@ def main():
     p.add_argument("--n", type=int, default=META_FOTOS)
     p.add_argument("--auto", type=float, default=0, help="segundos entre fotos (0 = manual)")
     p.set_defaults(f=cmd_capturar)
+    p = sub.add_parser("servir")
+    p.add_argument("--puerto", type=int, default=8000)
+    p.add_argument("--meta", type=int, default=META_FOTOS)
+    p.set_defaults(f=cmd_servir)
     p = sub.add_parser("subir")
     p.add_argument("--simulacro", action="store_true", help="solo muestra lo que haria")
     p.set_defaults(f=cmd_subir)

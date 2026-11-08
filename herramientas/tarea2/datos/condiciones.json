@@ -1,0 +1,28 @@
+{
+ "altura_camara_cm": 10.0,
+ "distancia_punto_cm": 55.0,
+ "fondo": "Mesa plegable blanca como fondo, a 30 cm detrás del objeto (ocupa todo el encuadre)",
+ "iluminacion": "Foco blanco del cuarto contiguo como fuente principal de luz (sin lámpara auxiliar y sin flash de la cámara)",
+ "flash": false,
+ "parecidos": [
+  "vasorojo",
+  "jarraroja"
+ ],
+ "por_que_parecen": "Ambos son del mismo color, pero uno es más grande que el otro",
+ "objetos": [
+  {
+   "nombre": "vasorojo",
+   "descripcion": "vaso transparente con diseño rojo, de pie, mismo lado hacia la cámara con giros pequeños"
+  },
+  {
+   "nombre": "jarraroja",
+   "descripcion": "jarra transparente con diseño rojo, de pie, giros pequeños"
+  },
+  {
+   "nombre": "laptop",
+   "descripcion": "laptop abierta unos 100°, girada 30-45° siempre hacia el mismo lado, centrada en el recorte"
+  }
+ ],
+ "fecha": "2026-11-07T21:35:32",
+ "recorte_modelo": "central 240x240 de la imagen QVGA (x 40-280), reducido a 96x96"
+}
