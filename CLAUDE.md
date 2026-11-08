@@ -32,6 +32,7 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
 - **Avance del plan (2026-11-07):**
   - Paso 0 completo (0.1 y 0.2), con push a `origin/main`.
   - T1.1.1 (`t90d`), T1.1.2 (LittleFS y endpoints `/t1/*`) y T1.1.3 (`/capture` registrado) están **completos: en `origin/main` (`05dfbaa`), subidos al robot por COM8 y probados el 2026-11-07** (`set t90d` cambia solo el giro derecho; POST a `/t1/datos` sobrevive a un reinicio y devuelve 413 sobre 32 KB; `/capture` da JPEG de 320×240).
+  - **T1.3.1 y app de la Tarea 2 (2026-11-07):** `herramientas/tarea1_descargar.py` y `herramientas/tarea2/tarea2.py` (T2.0–T2.4, T2.6, T2.7) están escritos y probados solo con datos simulados (`pruebas --simular`, `resultados`) y con `capturar` real contra el robot. Sin probar con Edge Impulse (`subir` necesita el CLI y la sesión de Fer), ni `condiciones`/`entrenamiento` de forma interactiva. Observación: `/capture` dio 500 una vez tras un reinicio del robot y se recuperó al reiniciar de nuevo; vigilarlo.
   - **T1.2 (2026-11-07):** página `/tarea1` (`tarea1_html.h`) escrita, compilada (36 % de flash), subida al robot por COM8 y revisada en el navegador con datos simulados (render de las 8 secciones, regresión de E2, resultados de E4, Markdown y CSV). **Nunca se ejecutó un movimiento desde la página**: lo primero que hay que probar con el robot en el piso es E2 (Ejecutar → medir → Aceptar tiempo). `/calibrar` redirige a `/tarea1#libre`. Sigue T1.3.1 (`herramientas/tarea1_descargar.py`).
 
 ## Objetivos del curso (en orden)

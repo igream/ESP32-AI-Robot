@@ -235,7 +235,7 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
 
 ## Etapas
 
-- [ ] **T2.0 [Sonnet] `tarea2.py preparar`.**
+- [x] **T2.0 [Sonnet] `tarea2.py preparar`.**
   - Verifica:
     - Que Python tenga las dependencias.
     - Que exista `edge-impulse-uploader` en el PATH; si no, muestra `npm install -g edge-impulse-cli`.
@@ -246,7 +246,7 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
   - Crear la cuenta y el proyecto en Edge Impulse.
   - Ejecutar `edge-impulse-uploader --clean` una vez para iniciar sesión y elegir el proyecto.
   - Las credenciales las escribe Fer, no el agente.
-- [ ] **T2.1 [Sonnet] `tarea2.py condiciones`.**
+- [x] **T2.1 [Sonnet] `tarea2.py condiciones`.**
   - Pide y guarda en `condiciones.json`:
     - Altura de la cámara (cm) y distancia del punto marcado a la cámara (cm).
     - Descripción del fondo y de la iluminación (por ejemplo, "lámpara LED blanca a 50 cm"), y si se usa el LED flash.
@@ -254,7 +254,7 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
   - Valida que los objetos sean distintos del LED, la bornera y el pulsador del video.
   - La cámara es la del robot: el robot queda fijo y su altura es constante; el punto marcado está frente a él.
   - 🛑 **Punto de control:** Fer confirma los objetos antes de capturar.
-- [ ] **T2.2 [Sonnet] `tarea2.py capturar --objeto <nombre> [--n 60] [--auto 2]`.**
+- [x] **T2.2 [Sonnet] `tarea2.py capturar --objeto <nombre> [--n 60] [--auto 2]`.**
   - Pide `GET /capture` al robot y guarda `dataset/<objeto>/<objeto>_NNN.jpg`.
   - Modo manual: Enter = foto. Modo `--auto S`: una foto cada S segundos, para que Fer solo gire el objeto.
   - Muestra el conteo y la resolución, y avisa si una foto llegó vacía o con otra resolución.
@@ -262,13 +262,13 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
   - Meta: **60 por objeto**, 10 más del mínimo de 50, por si se descartan algunas.
   - Antes de capturar, recuerda las condiciones de `condiciones.json`.
   - *Terminado:* 3 objetos con 50 fotos o más cada uno.
-- [ ] **T2.3 [Sonnet] `tarea2.py subir`.**
+- [x] **T2.3 [Sonnet] `tarea2.py subir`.**
   - Para cada objeto ejecuta `edge-impulse-uploader --category split --label <objeto> dataset/<objeto>/*.jpg` (reparto automático 80/20) y guarda la salida en el log.
   - Después muestra las instrucciones de etiquetado:
     - Edge Impulse Studio → Labeling queue.
     - Cuadros ajustados al objeto; se puede usar el etiquetado asistido.
 - [ ] **T2.3b [Fer] Etiquetar todas las imágenes** con cuadros delimitadores en Edge Impulse.
-- [ ] **T2.4 [Sonnet] `tarea2.py entrenamiento --corrida 1|2`.**
+- [x] **T2.4 [Sonnet] `tarea2.py entrenamiento --corrida 1|2`.**
   - Pide y guarda en `entrenamientos.json`:
     - Configuración: resolución del impulse (96×96), modo de color (escala de grises), modelo (FOMO MobileNetV2 0.35), ciclos, tasa de aprendizaje y aumento de datos.
     - Resultados: F1 de validación por clase y total, la matriz de confusión (filas y columnas que Fer copia de la pantalla), y el rendimiento estimado en el dispositivo (inferencia en ms, RAM y flash).
@@ -297,7 +297,7 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
     - Comentarios en español en todo el sketch (es entregable).
     - *Terminado:* con el robot fijo y un objeto en el punto marcado, el monitor serie muestra líneas `DET` con la etiqueta correcta.
   - **T2.5.4 [Fer]** Prueba autónoma con power bank, sin computadora: foto o video corto de máximo 1 minuto. Como no hay OLED, la evidencia es el LED flash: el sketch lo enciende 200 ms cuando detecta cualquier objeto con probabilidad ≥ umbral. **[Sonnet]** agrega ese comportamiento al sketch.
-- [ ] **T2.6 [Sonnet] `tarea2.py pruebas --puerto COM8`.**
+- [x] **T2.6 [Sonnet] `tarea2.py pruebas --puerto COM8`.**
   - Abre el puerto a 115200 baudios y escribe todo lo que llega en `pruebas_crudo.log`.
   - Plan de pruebas: por objeto, 10 en la **posición de entrenamiento** (`cond=entrenamiento`) y 5 en **otra posición u otra luz** (`cond=posicion` o `cond=luz`, a elegir por prueba). Total: 45 pruebas.
   - Flujo de cada prueba:
@@ -307,7 +307,7 @@ Es lineal: cada etapa necesita la anterior. La app guarda el avance en `herramie
     4. Muestra el resultado y propone acierto = (etiqueta == objeto). Fer puede corregirlo.
     5. Guarda en `pruebas.csv`: objeto, condición, prueba, etiqueta detectada, probabilidad, x, y, acierto, número de cuadros en la ventana, tiempo de inferencia medio de la ventana y nota.
   - Permite pausar y reanudar: sigue desde la última prueba guardada.
-- [ ] **T2.7 [Sonnet] `tarea2.py resultados`.** Genera `herramientas/tarea2/datos/resultados/resultados.md` y gráficas PNG:
+- [x] **T2.7 [Sonnet] `tarea2.py resultados`.** Genera `herramientas/tarea2/datos/resultados/resultados.md` y gráficas PNG:
   - **Tabla de resultados** del entregable: objeto, prueba, etiqueta detectada, probabilidad, (x, y), acierto (sí/no).
   - Exactitud por objeto y por condición, con IC95 de Wilson.
   - **Matriz de confusión de las pruebas reales**, incluida la columna `sin_deteccion`, también como PNG.
