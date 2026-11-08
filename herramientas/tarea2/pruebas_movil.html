@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pruebas de detección</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1b1f24;--mut:#667;--ac:#1f5fbf;--ok:#1a7f37;--no:#c62828;--bd:#d8dce2}
+@media (prefers-color-scheme:dark){:root{--bg:#121417;--card:#1c2026;--tx:#e8eaed;--mut:#9aa3ad;--ac:#6aa4ff;--ok:#4cc27a;--no:#ff6b6b;--bd:#323a44}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,sans-serif;padding:12px 16px 40px;max-width:560px;margin-inline:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin:10px 0}
+h1{font-size:15px;margin:4px 0;color:var(--mut);font-weight:600}
+.obj{font-size:30px;font-weight:700;margin:2px 0}
+.mut{color:var(--mut);font-size:14px}
+.barra{height:8px;background:var(--bd);border-radius:6px;overflow:hidden;margin:8px 0}
+.barra>i{display:block;height:100%;background:var(--ac)}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:12px 14px;cursor:pointer;min-height:48px}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac);width:100%;font-size:19px;font-weight:700;min-height:64px}
+button:disabled{opacity:.5}
+.fila{display:flex;gap:8px}.fila>*{flex:1}
+button.sel{outline:3px solid var(--ac)}
+button.ok.sel{background:var(--ok);color:#fff;border-color:var(--ok);outline:none}
+button.no.sel{background:var(--no);color:#fff;border-color:var(--no);outline:none}
+input{font:inherit;width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx)}
+.res{font-size:24px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:4px 6px;text-align:left;border-bottom:1px solid var(--bd)}
+.msg{color:var(--no);min-height:20px;font-size:14px}
+</style>
+</head>
+<body>
+<h1 id="prog">Cargando…</h1>
+<div class="barra"><i id="bar" style="width:0"></i></div>
+
+<div class="card" id="actual">
+  <div class="mut">Siguiente prueba</div>
+  <div class="obj" id="obj">—</div>
+  <div class="mut" id="ind"></div>
+  <div id="condBox" style="display:none;margin-top:10px">
+    <div class="mut">¿Qué cambiaste respecto al entrenamiento?</div>
+    <div class="fila" style="margin-top:6px">
+      <button id="cPos" class="sel" onclick="elegirCond('posicion')">Otra posición</button>
+      <button id="cLuz" onclick="elegirCond('luz')">Otra luz</button>
+    </div>
+  </div>
+  <div style="margin-top:12px"><button class="p" id="medir" onclick="medir()">MEDIR (3 s)</button></div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="card" id="resCard" style="display:none">
+  <div class="mut">Lo que detectó el robot</div>
+  <div class="res" id="etq">—</div>
+  <div class="mut" id="det"></div>
+  <div class="mut" style="margin:8px 0 4px">¿Cuenta como acierto?</div>
+  <div class="fila">
+    <button class="ok" id="bSi" onclick="marcar(true)">✔ Acierto</button>
+    <button class="no" id="bNo" onclick="marcar(false)">✘ Fallo</button>
+  </div>
+  <input id="nota" placeholder="Nota opcional (ej. segunda etiqueta falsa)" style="margin-top:8px">
+  <div class="fila" style="margin-top:8px">
+    <button onclick="repetir()">Repetir medición</button>
+    <button class="p" style="font-size:17px;min-height:48px" onclick="guardar()">Guardar</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="fila"><button onclick="deshacer()">Deshacer la última guardada</button></div>
+  <h1 style="margin-top:12px">Aciertos hasta ahora</h1>
+  <table id="resumen"></table>
+  <h1 style="margin-top:12px">Últimas guardadas</h1>
+  <table id="ultimas"></table>
+</div>
+
+<script>
+let cond = 'posicion', pend = null, acierto = null, ocupado = false;
+const $ = id => document.getElementById(id);
+async function api(ruta, metodo = 'GET') {
+  const r = await fetch(ruta, {method: metodo, cache: 'no-store'});
+  return r.json();
+}
+function elegirCond(c) { cond = c; $('cPos').classList.toggle('sel', c === 'posicion'); $('cLuz').classList.toggle('sel', c === 'luz'); }
+async function cargar() {
+  const e = await api('/api/estado');
+  const done = e.hechas, tot = e.total;
+  $('bar').style.width = (100 * done / tot) + '%';
+  if (done >= tot) {
+    $('prog').textContent = `Completo: ${done}/${tot} pruebas`;
+    $('obj').textContent = 'Listo';
+    $('ind').textContent = 'Ya puedes correr: tarea2.py resultados';
+    $('medir').disabled = true; $('condBox').style.display = 'none';
+  } else {
+    $('prog').textContent = `Prueba ${done + 1} de ${tot}`;
+    $('obj').textContent = e.actual.objeto;
+    $('ind').textContent = `Ponlo a ${e.actual.distancia_cm || '?'} cm de la cámara. ` +
+      (e.actual.cond === 'entrenamiento' ? 'Posición de entrenamiento.' : 'Cambia la posición o la luz.');
+    $('condBox').style.display = e.actual.cond === 'otra' ? 'block' : 'none';
+    $('medir').disabled = ocupado;
+  }
+  $('resumen').innerHTML = e.resumen.map(r => `<tr><td>${r.objeto}</td><td>${r.k}/${r.n}</td></tr>`).join('') || '<tr><td class="mut">Sin datos</td></tr>';
+  $('ultimas').innerHTML = e.ultimas.map(r => `<tr><td>${r.n}</td><td>${r.objeto}</td><td>${r.etiqueta}</td><td>${r.acierto === 'si' ? '✔' : '✘'}</td></tr>`).join('') || '<tr><td class="mut">Aún no hay</td></tr>';
+}
+async function medir() {
+  if (ocupado) return;
+  ocupado = true; $('medir').disabled = true; $('msg').textContent = ''; $('medir').textContent = 'Leyendo…';
+  try {
+    const r = await api('/api/medir?cond=' + cond, 'POST');
+    if (!r.ok) { $('msg').textContent = r.error || 'Error al medir'; return; }
+    pend = r; acierto = r.acierto_auto;
+    $('etq').textContent = r.etiqueta === 'sin_deteccion' ? 'Sin detección' : `${r.etiqueta} (${r.prob.toFixed(2)})`;
+    $('det').textContent = `Cuadros: ${r.cuadros} · con la etiqueta correcta: ${r.cuadros_ok}` + (r.otras ? ` · otras etiquetas: ${r.otras}` : '');
+    $('nota').value = ''; pintar(); $('resCard').style.display = 'block';
+    $('resCard').scrollIntoView({behavior: 'smooth'});
+  } catch (e) { $('msg').textContent = 'No se pudo medir: ' + e; }
+  finally { ocupado = false; $('medir').textContent = 'MEDIR (3 s)'; $('medir').disabled = false; }
+}
+function marcar(v) { acierto = v; pintar(); }
+function pintar() { $('bSi').classList.toggle('sel', acierto === true); $('bNo').classList.toggle('sel', acierto === false); }
+function repetir() { pend = null; $('resCard').style.display = 'none'; api('/api/descartar', 'POST'); window.scrollTo({top: 0, behavior: 'smooth'}); }
+async function guardar() {
+  if (!pend) return;
+  const r = await api('/api/confirmar?acierto=' + (acierto ? 's' : 'n') + '&nota=' + encodeURIComponent($('nota').value), 'POST');
+  if (!r.ok) { $('msg').textContent = r.error || 'No se guardó'; return; }
+  pend = null; $('resCard').style.display = 'none'; await cargar(); window.scrollTo({top: 0, behavior: 'smooth'});
+}
+async function deshacer() {
+  if (!confirm('¿Borrar la última prueba guardada?')) return;
+  const r = await api('/api/deshacer', 'POST');
+  $('msg').textContent = r.ok ? '' : (r.error || '');
+  pend = null; $('resCard').style.display = 'none'; cargar();
+}
+cargar();
+</script>
+</body>
+</html>

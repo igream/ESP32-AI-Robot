@@ -1,0 +1,120 @@
+{
+ "1": {
+  "config": {
+   "resolucion": "96x96",
+   "color": "RGB",
+   "modelo": "FOMO MobileNetV2 0.35",
+   "ciclos": 60,
+   "tasa": 0.001,
+   "aumento": "si"
+  },
+  "fecha": "2026-11-08T13:37:13",
+  "f1_total": 1.0,
+  "f1_clases": {
+   "vasorojo": 1.0,
+   "jarraroja": 1.0,
+   "laptop": 1.0
+  },
+  "matriz": {
+   "etiquetas": [
+    "vasorojo",
+    "jarraroja",
+    "laptop",
+    "uncertain"
+   ],
+   "filas": [
+    [
+     10.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     6.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  "dispositivo": {
+   "inferencia_ms": 628.0,
+   "ram_kb": 133.0,
+   "flash_kb": 81.3
+  },
+  "captura": "docs/Tarea2/img/entrenamiento_1.png"
+ },
+ "2": {
+  "config": {
+   "resolucion": "96x96",
+   "color": "RGB",
+   "modelo": "FOMO MobileNetV2 0.35",
+   "ciclos": 100,
+   "tasa": 0.001,
+   "aumento": "si"
+  },
+  "fecha": "2026-11-08T13:37:14",
+  "f1_total": 1.0,
+  "f1_clases": {
+   "vasorojo": 1.0,
+   "jarraroja": 1.0,
+   "laptop": 1.0
+  },
+  "matriz": {
+   "etiquetas": [
+    "vasorojo",
+    "jarraroja",
+    "laptop",
+    "uncertain"
+   ],
+   "filas": [
+    [
+     10.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     6.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     7.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   ]
+  },
+  "dispositivo": {
+   "inferencia_ms": 628.0,
+   "ram_kb": 133.0,
+   "flash_kb": 81.3
+  },
+  "captura": "docs/Tarea2/img/entrenamiento_2.png",
+  "cambio": {
+   "parametro": "ciclos de entrenamiento (60 a 100)",
+   "motivo": "Probar si mas ciclos mejoraban el F1 de la laptop; con el dataset v2 (laptop a 75 cm) la validacion sale igual en ambas corridas"
+  }
+ }
+}

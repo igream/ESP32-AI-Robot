@@ -1,0 +1,120 @@
+{
+ "1": {
+  "config": {
+   "resolucion": "96x96",
+   "color": "RGB",
+   "modelo": "FOMO MobileNetV2 0.35",
+   "ciclos": 100,
+   "tasa": 0.001,
+   "aumento": "si"
+  },
+  "fecha": "2026-11-08T16:28:40",
+  "f1_total": 1.0,
+  "f1_clases": {
+   "vasorojo": 1.0,
+   "jarraroja": 1.0,
+   "laptop": 1.0
+  },
+  "matriz": {
+   "etiquetas": [
+    "vasorojo",
+    "jarraroja",
+    "laptop",
+    "uncertain"
+   ],
+   "filas": [
+    [
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     100.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     100.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   ]
+  },
+  "dispositivo": {
+   "inferencia_ms": 628.0,
+   "ram_kb": 133.0,
+   "flash_kb": 81.3
+  },
+  "captura": "docs/Tarea2/img/entrenamiento_1.png"
+ },
+ "2": {
+  "config": {
+   "resolucion": "96x96",
+   "color": "RGB",
+   "modelo": "FOMO MobileNetV2 0.35",
+   "ciclos": 60,
+   "tasa": 0.001,
+   "aumento": "si"
+  },
+  "fecha": "2026-11-08T17:14:38",
+  "f1_total": 1.0,
+  "f1_clases": {
+   "vasorojo": 1.0,
+   "jarraroja": 1.0,
+   "laptop": 1.0
+  },
+  "matriz": {
+   "etiquetas": [
+    "vasorojo",
+    "jarraroja",
+    "laptop",
+    "uncertain"
+   ],
+   "filas": [
+    [
+     100.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     100.0,
+     0.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     100.0,
+     0.0
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     100.0
+    ]
+   ]
+  },
+  "dispositivo": {
+   "inferencia_ms": 628.0,
+   "ram_kb": 133.0,
+   "flash_kb": 81.3
+  },
+  "captura": "docs/Tarea2/img/entrenamiento_2.png",
+  "cambio": {
+   "parametro": "ciclos de entrenamiento (100 a 60)",
+   "motivo": "Comparar un entrenamiento mas corto con el de la corrida 1 en el dataset v3; la validacion queda igual (100 %)"
+  }
+ }
+}

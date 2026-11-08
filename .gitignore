@@ -13,3 +13,7 @@ __pycache__/
 
 # Reporte
 docs/*/_reporte.html
+
+# Librerias de Edge Impulse exportadas (5 MB cada una, se regeneran desde el Studio)
+MODELO*.zip
+ei-*.zip

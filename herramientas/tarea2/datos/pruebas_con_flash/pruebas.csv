@@ -1,0 +1,46 @@
+objeto,condicion,prueba,etiqueta,prob,x,y,acierto,cuadros,t_inf_ms,nota,cuadros_ok,otras
+vasorojo,entrenamiento,1,vasorojo,0.996,44.0,44.0,si,4,798.0,,4,
+vasorojo,entrenamiento,2,vasorojo,0.996,60.0,44.0,si,3,798.0,,3,
+vasorojo,entrenamiento,3,vasorojo,0.980,32.0,44.0,si,4,798.0,,4,
+vasorojo,entrenamiento,4,vasorojo,0.996,28.0,44.0,si,4,798.0,,4,
+vasorojo,entrenamiento,5,vasorojo,0.941,24.0,44.0,si,4,798.0,,4,
+vasorojo,entrenamiento,6,vasorojo,0.855,36.0,44.0,si,4,798.0,,2,
+vasorojo,entrenamiento,7,vasorojo,0.996,52.0,44.0,si,3,798.0,,3,
+vasorojo,entrenamiento,8,vasorojo,0.973,68.0,44.0,si,3,798.0,,3,
+vasorojo,entrenamiento,9,vasorojo,0.996,52.0,44.0,si,4,798.0,,4,
+vasorojo,entrenamiento,10,vasorojo,0.996,36.0,44.0,si,3,798.0,,3,
+vasorojo,luz,1,vasorojo,0.996,28.0,44.0,si,3,798.0,,3,
+vasorojo,posicion,2,vasorojo,0.988,28.0,44.0,si,3,798.0,,3,
+vasorojo,posicion,3,vasorojo,0.996,44.0,44.0,si,4,798.0,,4,
+vasorojo,posicion,4,vasorojo,0.941,40.0,44.0,si,3,798.0,,3,
+vasorojo,posicion,5,vasorojo,0.992,56.0,44.0,si,3,798.0,,3,
+jarraroja,entrenamiento,1,jarraroja,0.973,36.0,36.0,si,7,798.0,,4,vasorojo
+jarraroja,entrenamiento,2,vasorojo,0.918,52.0,44.0,no,6,798.0,,3,vasorojo
+jarraroja,entrenamiento,3,sin_deteccion,,,,no,3,798.0,,0,
+jarraroja,entrenamiento,4,jarraroja,0.945,32.0,36.0,si,5,798.0,,3,vasorojo
+jarraroja,entrenamiento,5,jarraroja,0.855,16.0,36.0,si,4,798.0,,3,vasorojo
+jarraroja,entrenamiento,6,jarraroja,0.996,36.0,40.0,si,5,798.0,,3,vasorojo
+jarraroja,entrenamiento,7,jarraroja,0.988,44.0,36.0,si,6,798.0,,3,vasorojo
+jarraroja,entrenamiento,8,vasorojo,0.949,48.0,28.0,no,4,798.0,,0,vasorojo
+jarraroja,entrenamiento,9,vasorojo,0.992,28.0,28.0,no,4,798.0,"Parece ser que cuando la jarra está con la oreja apuntando enfrente, lo detecta como vaso rojo, es necesario tener la oreja a los laterales para que detecte como jarra",0,vasorojo
+jarraroja,entrenamiento,10,jarraroja,0.996,20.0,36.0,si,3,798.0,,3,
+jarraroja,posicion,1,vasorojo,0.988,36.0,40.0,no,4,798.0,Se alejó de la cámara,0,vasorojo
+jarraroja,luz,2,jarraroja,0.996,36.0,40.0,si,3,798.0,Se midió solo con linterna del espcam,3,
+jarraroja,posicion,3,jarraroja,0.996,20.0,36.0,si,3,798.0,Se midió solo con la luz de la camara y se movio a la izquierda,3,
+jarraroja,posicion,4,vasorojo,0.547,36.0,36.0,no,4,798.0,Se alejó mas de la camara,0,vasorojo
+jarraroja,posicion,5,jarraroja,0.961,44.0,36.0,si,4,798.0,,3,vasorojo
+laptop,entrenamiento,1,laptop,0.949,44.0,40.0,si,3,798.0,,1,
+laptop,entrenamiento,2,laptop,0.926,48.0,40.0,si,3,798.0,,3,
+laptop,entrenamiento,3,laptop,0.855,40.0,40.0,si,3,798.0,,3,
+laptop,entrenamiento,4,laptop,0.965,36.0,44.0,si,4,798.0,,4,
+laptop,entrenamiento,5,laptop,0.891,36.0,36.0,si,3,798.0,,3,
+laptop,entrenamiento,6,laptop,0.953,36.0,40.0,si,4,798.0,,4,
+laptop,entrenamiento,7,laptop,0.953,48.0,44.0,si,3,798.0,,2,
+laptop,entrenamiento,8,laptop,0.992,56.0,44.0,si,3,798.0,,2,
+laptop,entrenamiento,9,laptop,0.867,44.0,44.0,si,3,798.0,,3,
+laptop,entrenamiento,10,laptop,0.957,48.0,44.0,si,3,798.0,,1,
+laptop,posicion,1,laptop,0.980,52.0,44.0,si,3,798.0,,1,
+laptop,posicion,2,laptop,0.980,52.0,44.0,si,3,798.0,,3,
+laptop,posicion,3,laptop,0.918,44.0,36.0,si,4,798.0,,4,
+laptop,posicion,4,laptop,0.953,64.0,40.0,si,3,798.0,Se giró al lado contrario,3,
+laptop,luz,5,laptop,0.988,64.0,40.0,si,4,798.0,Al lado contrario con iluminación de la camara,4,

@@ -16,13 +16,19 @@
   },
   {
    "nombre": "jarraroja",
-   "descripcion": "jarra transparente con diseño rojo, de pie, giros pequeños"
+   "descripcion": "jarra transparente con diseño rojo, de pie, giros pequeños; la oreja (asa transparente) lleva cinta adhesiva amarilla como marcador (dataset v3)"
   },
   {
    "nombre": "laptop",
-   "descripcion": "laptop abierta unos 100°, girada 30-45° siempre hacia el mismo lado, centrada en el recorte"
+   "descripcion": "laptop abierta unos 90°, girada unos 45° siempre hacia el mismo lado, centrada en el recorte (dataset v2, a 75 cm)"
   }
  ],
+ "distancia_por_objeto_cm": {
+  "vasorojo": 55,
+  "jarraroja": 55,
+  "laptop": 75
+ },
+ "nota_distancia": "La laptop se fotografía más lejos para que quepa completa en el recorte de 240x240 en todas sus poses (a 55-60 cm se desbordaba). Altura de cámara, fondo, luz y sin flash no cambian.",
  "fecha": "2026-11-07T21:35:32",
  "recorte_modelo": "central 240x240 de la imagen QVGA (x 40-280), reducido a 96x96"
 }

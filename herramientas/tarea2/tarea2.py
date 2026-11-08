@@ -46,7 +46,7 @@ PROHIBIDOS = {"led", "bornera", "pulsador"}      # objetos del video de referenc
 MIN_FOTOS, META_FOTOS = 50, 60
 PRUEBAS_ENT, PRUEBAS_OTRA = 10, 5
 VENTANA_S = 3.0
-COLS_PRUEBAS = ["objeto", "condicion", "prueba", "etiqueta", "prob", "x", "y", "acierto", "cuadros", "t_inf_ms", "nota"]
+COLS_PRUEBAS = ["objeto", "condicion", "prueba", "etiqueta", "prob", "x", "y", "acierto", "cuadros", "t_inf_ms", "nota", "cuadros_ok", "otras"]
 
 
 # ---------------------------------------------------------------- utilidades
@@ -410,6 +410,8 @@ def cmd_subir(a):
     DATOS.mkdir(parents=True, exist_ok=True)
     with open(ruta("subida.log"), "a", encoding="utf-8") as log:
         for o in objs:
+            if a.objeto and o != a.objeto:
+                continue
             fotos = sorted((ruta("dataset") / o).glob("*.jpg"))
             if len(fotos) < MIN_FOTOS:
                 sys.exit(f"{o}: solo {len(fotos)} fotos (minimo {MIN_FOTOS}).")
@@ -553,6 +555,8 @@ class LectorSimulado:
 
 
 def cmd_pruebas(a):
+    if a.web:
+        return cmd_pruebas_web(a)
     objs = objetos()
     if not objs:
         sys.exit("Falta condiciones.json.")
@@ -601,12 +605,188 @@ def cmd_pruebas(a):
             else:
                 nota = ""
             tinf = sum(t["dsp"] + t["clas"] for t in tr) / len(tr) if tr else ""
+            # Medidas extra para analizar confusiones: en cuántos cuadros apareció la etiqueta correcta y
+            # qué otras etiquetas (falsas) se vieron en la ventana (p. ej. un vasorojo sobre una jarra).
+            cuadros_ok = sum(1 for t in dets if t["etiqueta"] == obj)
+            otras = ",".join(sorted({t["etiqueta"] for t in dets if t["etiqueta"] != obj}))
             w.writerow({"objeto": obj, "condicion": cond, "prueba": num, "etiqueta": etiqueta,
+                        "cuadros_ok": cuadros_ok, "otras": otras,
                         "prob": f"{prob:.3f}" if dets else "", "x": f"{x:.1f}" if dets else "", "y": f"{y:.1f}" if dets else "",
                         "acierto": "si" if acierto else "no", "cuadros": len(tr),
                         "t_inf_ms": f"{tinf:.1f}" if tr else "", "nota": nota.strip()})
             f.flush()
     print("\nPruebas completas." if contar_pruebas() >= len(plan) else "\nPausa. Vuelve a correr 'pruebas' para continuar.")
+
+
+def ip_lan():
+    """IP de la PC en la red por la que sale a Internet (no manda ningun paquete)."""
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "IP-DE-LA-PC"
+
+
+def cmd_pruebas_web(a):
+    """Las mismas 45 pruebas, pero manejadas desde el celular (pagina pruebas_movil.html).
+    El robot sigue conectado por USB a la PC; el celular solo necesita llegar a la PC por la red."""
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+    from urllib.parse import urlparse, parse_qs
+    objs = objetos()
+    if not objs:
+        sys.exit("Falta condiciones.json.")
+    dist = (leer_json("condiciones.json") or {}).get("distancia_por_objeto_cm", {})
+    cond_d = (leer_json("condiciones.json") or {}).get("distancia_punto_cm")
+    lector = LectorSimulado() if a.simular else LectorSerie(a.puerto)
+    plan = []
+    for o in objs:
+        plan += [(o, "entrenamiento", i) for i in range(1, PRUEBAS_ENT + 1)]
+        plan += [(o, "otra", i) for i in range(1, PRUEBAS_OTRA + 1)]
+    pagina = (AQUI / "pruebas_movil.html").read_bytes()
+    DATOS.mkdir(parents=True, exist_ok=True)
+    crudo = open(ruta("pruebas_crudo.log"), "a", encoding="utf-8")
+    lock = threading.Lock()
+    est = {"pend": None}
+
+    def filas():
+        p = ruta("pruebas.csv")
+        if not p.exists():
+            return []
+        with open(p, encoding="utf-8", newline="") as f:
+            return list(csv.DictReader(f))
+
+    def reescribir(fs):
+        with open(ruta("pruebas.csv"), "w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=COLS_PRUEBAS)
+            w.writeheader()
+            for r in fs:
+                w.writerow({k: r.get(k, "") for k in COLS_PRUEBAS})
+
+    def estado():
+        fs = filas()
+        hechas = len(fs)
+        r = {"hechas": hechas, "total": len(plan), "resumen": [], "ultimas": []}
+        if hechas < len(plan):
+            o, c, n = plan[hechas]
+            r["actual"] = {"objeto": o, "cond": c, "num": n, "distancia_cm": dist.get(o, cond_d)}
+        for o in objs:
+            sel = [x for x in fs if x["objeto"] == o]
+            if sel:
+                r["resumen"].append({"objeto": o, "k": sum(x["acierto"] == "si" for x in sel), "n": len(sel)})
+        for i, x in list(enumerate(fs, 1))[-5:][::-1]:
+            r["ultimas"].append({"n": i, "objeto": x["objeto"], "etiqueta": x["etiqueta"], "acierto": x["acierto"]})
+        return r
+
+    def medir(cond):
+        hechas = len(filas())
+        if hechas >= len(plan):
+            return {"ok": False, "error": "Ya estan las 45 pruebas."}
+        obj, c0, num = plan[hechas]
+        c = "entrenamiento" if c0 == "entrenamiento" else (cond if cond in ("posicion", "luz") else "posicion")
+        if a.simular:
+            lector.objeto = obj
+        crudo.write(f"# prueba {hechas + 1} {obj} {c} {datetime.now().isoformat(timespec='seconds')}\n")
+        tr = lector.ventana(VENTANA_S, crudo)
+        crudo.flush()
+        dets = [t for t in tr if t["tipo"] == "DET"]
+        if dets:
+            m = max(dets, key=lambda t: t["prob"])
+            etq, prob, x, y = m["etiqueta"], m["prob"], m["x"], m["y"]
+        else:
+            etq, prob, x, y = "sin_deteccion", 0.0, None, None
+        tinf = sum(t["dsp"] + t["clas"] for t in tr) / len(tr) if tr else None
+        pend = {"ok": True, "objeto": obj, "cond": c, "prueba": num, "etiqueta": etq, "prob": prob, "x": x, "y": y,
+                "cuadros": len(tr), "t_inf_ms": tinf,
+                "cuadros_ok": sum(1 for t in dets if t["etiqueta"] == obj),
+                "otras": ",".join(sorted({t["etiqueta"] for t in dets if t["etiqueta"] != obj})),
+                "acierto_auto": etq == obj}
+        est["pend"] = pend
+        return pend
+
+    def confirmar(acierto, nota):
+        p = est["pend"]
+        if not p:
+            return {"ok": False, "error": "No hay una medicion pendiente."}
+        fs = filas()
+        if len(fs) >= len(plan) or plan[len(fs)][0] != p["objeto"] or plan[len(fs)][2] != p["prueba"]:
+            est["pend"] = None
+            return {"ok": False, "error": "La medicion ya no corresponde a la prueba actual."}
+        nuevo = not ruta("pruebas.csv").exists()
+        with open(ruta("pruebas.csv"), "a", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=COLS_PRUEBAS)
+            if nuevo:
+                w.writeheader()
+            ok = p["x"] is not None
+            w.writerow({"objeto": p["objeto"], "condicion": p["cond"], "prueba": p["prueba"], "etiqueta": p["etiqueta"],
+                        "prob": f"{p['prob']:.3f}" if ok else "", "x": f"{p['x']:.1f}" if ok else "",
+                        "y": f"{p['y']:.1f}" if ok else "", "acierto": "si" if acierto else "no", "cuadros": p["cuadros"],
+                        "t_inf_ms": f"{p['t_inf_ms']:.1f}" if p["t_inf_ms"] is not None else "", "nota": nota.strip(),
+                        "cuadros_ok": p["cuadros_ok"], "otras": p["otras"]})
+        est["pend"] = None
+        return {"ok": True}
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def enviar(self, codigo, tipo, cuerpo):
+            self.send_response(codigo)
+            self.send_header("Content-Type", tipo)
+            self.send_header("Content-Length", str(len(cuerpo)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(cuerpo)
+
+        def json(self, obj, codigo=200):
+            self.enviar(codigo, "application/json", json.dumps(obj, ensure_ascii=False).encode("utf-8"))
+
+        def atender(self, metodo):
+            u = urlparse(self.path)
+            q = parse_qs(u.query)
+            try:
+                with lock:
+                    if metodo == "GET" and u.path == "/":
+                        return self.enviar(200, "text/html; charset=utf-8", pagina)
+                    if metodo == "GET" and u.path == "/api/estado":
+                        return self.json(estado())
+                    if metodo == "POST" and u.path == "/api/medir":
+                        return self.json(medir((q.get("cond") or [""])[0]))
+                    if metodo == "POST" and u.path == "/api/confirmar":
+                        return self.json(confirmar((q.get("acierto") or ["n"])[0] == "s", (q.get("nota") or [""])[0]))
+                    if metodo == "POST" and u.path == "/api/descartar":
+                        est["pend"] = None
+                        return self.json({"ok": True})
+                    if metodo == "POST" and u.path == "/api/deshacer":
+                        fs = filas()
+                        if not fs:
+                            return self.json({"ok": False, "error": "No hay pruebas guardadas."})
+                        reescribir(fs[:-1])
+                        est["pend"] = None
+                        crudo.write(f"# deshecha la prueba {len(fs)}\n")
+                        crudo.flush()
+                        return self.json({"ok": True})
+            except Exception as e:
+                return self.json({"ok": False, "error": str(e)}, 500)
+            self.json({"ok": False, "error": "no encontrado"}, 404)
+
+        def do_GET(self):
+            self.atender("GET")
+
+        def do_POST(self):
+            self.atender("POST")
+
+    srv = ThreadingHTTPServer(("0.0.0.0", a.puerto_web), H)
+    print(f"Pruebas desde el celular. El robot sigue por USB ({'simulado' if a.simular else a.puerto}).")
+    print(f"Conecta el celular a la misma red que la PC y abre:\n\n    http://{ip_lan()}:{a.puerto_web}\n")
+    print("Ctrl+C para terminar (el avance queda guardado en pruebas.csv).")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nServidor detenido.")
 
 
 # ---------------------------------------------------------------- T2.7 resultados
@@ -769,6 +949,7 @@ def main():
     p.set_defaults(f=cmd_servir)
     p = sub.add_parser("subir")
     p.add_argument("--simulacro", action="store_true", help="solo muestra lo que haria")
+    p.add_argument("--objeto", help="subir solo este objeto (por ejemplo, tras rehacer su captura)")
     p.set_defaults(f=cmd_subir)
     p = sub.add_parser("entrenamiento")
     p.add_argument("--corrida", type=int, choices=[1, 2], required=True)
@@ -779,6 +960,8 @@ def main():
     p = sub.add_parser("pruebas")
     p.add_argument("--puerto", default="COM8")
     p.add_argument("--simular", action="store_true", help="tramas falsas, sin robot")
+    p.add_argument("--web", action="store_true", help="manejar las pruebas desde el celular (pagina web)")
+    p.add_argument("--puerto-web", type=int, default=8001, dest="puerto_web")
     p.set_defaults(f=cmd_pruebas)
     sub.add_parser("resultados").set_defaults(f=cmd_resultados)
     a = ap.parse_args()
