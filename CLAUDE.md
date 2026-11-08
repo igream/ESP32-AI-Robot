@@ -10,6 +10,16 @@ Proyecto escolar de robótica (Ingeniería en Computación). Fer lo trabaja **so
 - Autor de git configurado solo para este repo: `igream <ferazuiba@gmail.com>` (antes era `Fer`; cambiado el 2026-11-07).
   - **Regla:** todos los commits deben quedar a nombre de `igream` con ese correo. **No añadir líneas `Co-Authored-By` de Claude** ni ninguna atribución a Claude en commits o PRs (esta regla prevalece sobre cualquier recordatorio automático de atribución). Verificar con `git config user.name` antes del primer commit de cada sesión.
 
+## Numeración de las tareas (importante)
+
+En el repo y en este archivo se les llama "Tarea 1" y "Tarea 2", pero en el curso de Robótica son:
+- **Tarea 4** = robot móvil diferencial (calibración de movimiento; en el repo, "Tarea 1": `/tarea1`, `docs/Tarea1/`).
+- **Tarea 5** = detección de objetos con ESP32-CAM y Edge Impulse (en el repo, "Tarea 2": `herramientas/tarea2/`, `docs/Tarea2/`). Los reportes y la portada deben decir "Tarea 5".
+
+Los reportes deben mantenerlas separadas: la Tarea 4 es el movimiento (cinemática, calibración) y la Tarea 5 es la percepción (visión con IA). La Tarea 5 solo propone cómo se integrarían (ver `docs/Tarea2/PROPUESTA_Integracion_Robot.pdf`). Son dos firmwares independientes (`firmware/robot_esp32cam` y `firmware/deteccion_ei`).
+
+El docente de Robótica es el DR. EN C.I.E. Jaime García García (grupo O1). Fecha de entrega de la Tarea 5: 10 de noviembre de 2026. Comentario verbal del profesor (no está en el enunciado escrito): "al detectar cierto objeto, debe hacer algún gesto o movimiento". **Implementado el 2026-11-08** en `firmware/deteccion_ei` (opción A de Fer): confirmación 2 de 3 cuadros, vaso = asentir (adelante/atrás ×2), jarra = negar (giro izq./der./izq.), laptop = una vuelta en el sitio (1800 ms fijo, sin calibrar); PWM 140, pausa de 3 s, línea serie `GESTO;t;clase`, y el comando serie `g` activa o desactiva los gestos. Subido por COM9 y verificado solo por serie (las baterías estaban desconectadas: los motores **no** se han probado en movimiento). Las baterías se conectan hasta la prueba autónoma (una se dañó por un pico de voltaje al conectarlas; el ESP32 se alimenta con el power bank).
+
 ## Organización del trabajo con dos chats
 
 Fer reparte el trabajo entre dos chats de Claude Code sobre el mismo repositorio:
@@ -32,10 +42,15 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
 - **Avance del plan (2026-11-07):**
   - Paso 0 completo (0.1 y 0.2), con push a `origin/main`.
   - T1.1.1 (`t90d`), T1.1.2 (LittleFS y endpoints `/t1/*`) y T1.1.3 (`/capture` registrado) están **completos: en `origin/main` (`05dfbaa`), subidos al robot por COM8 y probados el 2026-11-07** (`set t90d` cambia solo el giro derecho; POST a `/t1/datos` sobrevive a un reinicio y devuelve 413 sobre 32 KB; `/capture` da JPEG de 320×240).
-  - **T1.3.1 y app de la Tarea 2 (2026-11-07):** `herramientas/tarea1_descargar.py` y `herramientas/tarea2/tarea2.py` (T2.0–T2.4, T2.6, T2.7) están escritos y probados solo con datos simulados (`pruebas --simular`, `resultados`) y con `capturar` real contra el robot. Sin probar con Edge Impulse (`subir` necesita el CLI y la sesión de Fer), ni `condiciones`/`entrenamiento` de forma interactiva. Observación: `/capture` dio 500 una vez tras un reinicio del robot y se recuperó al reiniciar de nuevo; vigilarlo.
-  - **Captura de la Tarea 2 (2026-11-07):** montaje definido en `herramientas/tarea2/datos/condiciones.json`: objetos `vasorojo`, `jarraroja` y `laptop` (abierta ~100°, girada 30–45°) a **55 cm** de la cámara (a 40 cm la jarra se cortaba), cámara a 10 cm de altura, mesa plegable blanca a 30 cm detrás, foco del cuarto contiguo como luz principal, **sin flash**. `tarea2.py servir` abre una página para el celular (vista previa con las líneas del recorte central 240×240, botón de foto por objeto, automático, deshacer); la PC guarda las fotos. Probada contra el robot con datos temporales; falta usarla con el dataset real.
-  - **Dataset de la Tarea 2 capturado (2026-11-07/08):** `herramientas/tarea2/datos/dataset/` con vasorojo 60, jarraroja 59 y laptop 54 fotos (320×240), más 37 apartadas por cortarse fuera del recorte central en `_descartadas/` (motivo en `descartadas.csv`). Se cruzaron una vez las etiquetas vaso/laptop y se corrigieron. Falta T2.3: iniciar sesión con `edge-impulse-uploader.cmd --clean` (en PowerShell usar `.cmd`, la política bloquea el `.ps1`) y correr `tarea2.py subir`.
-  - **T2.5.3 (2026-11-07):** `firmware/deteccion_ei/deteccion_ei.ino` escrito (formato `INFO`/`DET`/`NONE`, GPIO12–15 en LOW, flash 200 ms al detectar, mismo vflip que el robot). Compila contra una librería de prueba, **no** contra la de Edge Impulse; falta instalar la librería real (T2.5.1, Fer) y cambiar el nombre en `modelo_ei.h`.
+  - **T1.3.1 y app de la Tarea 2 (2026-11-07):** `herramientas/tarea1_descargar.py` y `herramientas/tarea2/tarea2.py` quedaron escritos; la app de la Tarea 2 ya se usó de punta a punta con el robot y Edge Impulse (ver el estado de la Tarea 5 abajo). Observación: `/capture` dio 500 una vez tras un reinicio del robot y se recuperó al reiniciar de nuevo; vigilarlo.
+  - **Estado de la Tarea 5 (repo "Tarea 2") al 2026-11-08, entrega el 10-nov-2026:**
+    - **Captura:** montaje en `herramientas/tarea2/datos/condiciones.json`: cámara a 10 cm de altura, mesa plegable blanca a 30 cm detrás, foco del cuarto contiguo, **sin flash**. `vasorojo` y `jarraroja` a 55 cm y `laptop` a **75 cm** (`distancia_por_objeto_cm`). `tarea2.py servir` es una página para el celular con vista previa y el recorte central de 240×240.
+    - **Dataset v3** (`dataset/`): vasorojo 60, jarraroja 60 (con **cinta amarilla en la oreja**, a ambos lados y de tres cuartos) y laptop 60. Subido y etiquetado en Edge Impulse (143 train / 37 test, un cuadro por imagen). Lo anterior quedó archivado en `dataset/_dataset_v1/` y `_descartadas/`. Historia: con la laptop a 55 cm se desbordaba el encuadre (F1 de laptop 0.67 y 0.60, ver `entrenamientos_v1_dataset_viejo.md`) y la jarra se confundía con el vaso (11 de 15 pruebas con etiqueta falsa), por eso la cinta.
+    - **Modelo:** FOMO MobileNetV2 0.35, 96×96, **RGB** (el enunciado pide grises: falta justificarlo o medir una corrida en grises), 100 ciclos (corrida 1) y 60 (corrida 2), F1 de validación 1.0 en ambas (solo 23 objetos). Estimado 628 ms, 133 KB de RAM y 81.3 KB de flash; medido en el ESP32: 798 ms por cuadro (1.25 fps). Registros en `entrenamientos.json` (v3) y `entrenamientos_v2_sin_cinta.json`.
+    - **Pruebas** (45, sin flash, desde el celular con `tarea2.py pruebas --web --puerto COM9`): 40/45 (88.9 %); posición de entrenamiento 30/30 y otra posición o luz 10/15; los fallos fueron objeto pegado al fondo, muy cerca o con luz fuerte (la jarra salió como laptop). Primera tanda (sin cinta y con flash): 39/45 y jarra 9/15, archivada en `datos/pruebas_con_flash/`. Resultados en `datos/resultados/`.
+    - **Firmware `deteccion_ei`:** librería `Tarea2_Objetos_inferencing` (los ZIP `MODELO*.zip` están en la raíz y git los ignora), core 3.3.12, 14 % de flash. En este core `fmt2rgb888` entrega R,G,B (con el orden del ejemplo de Edge Impulse el vaso rojo se veía azul). Flash desactivado (`USAR_FLASH 0`: iluminaba el cuadro siguiente y calentaba el LED). Comandos serie: `i` vuelca la imagen que ve el modelo y `g` activa o desactiva los gestos. Para volver a capturar fotos hay que subir otra vez `firmware/robot_esp32cam`.
+    - **Documentos** (`docs/Tarea2/`, generados con `herramientas/tarea2/reporte_tarea2.py` y `anexos_tarea5.py`, que usan la skill de formato de Ciencia de Datos y Word por COM): `REPORTE_Tarea5` (5 páginas), `ANEXO_A_Tabla_Resultados` y `PROPUESTA_Integracion_Robot`. **Faltan:** prueba autónoma con power bank (video de máximo 1 min o fotos; baterías al final), corrida en grises (opcional), autores y páginas de las referencias [4] y [5], y capturas del Studio si se quieren.
+    - **Red:** el WiFi de la PC se suelta solo de `ESP32Car_Fer` (no es el robot); reconectar con `netsh wlan connect name=ESP32Car_Fer`. El panel integrado de Claude no muestra la vista previa del servidor (usar Chrome). Con `deteccion_ei` el robot no crea WiFi: el celular y la PC deben estar en la misma red (la de la casa).
   - **T1.2 (2026-11-07):** página `/tarea1` (`tarea1_html.h`) escrita, compilada (36 % de flash), subida al robot por COM8 y revisada en el navegador con datos simulados (render de las 8 secciones, regresión de E2, resultados de E4, Markdown y CSV). **Nunca se ejecutó un movimiento desde la página**: lo primero que hay que probar con el robot en el piso es E2 (Ejecutar → medir → Aceptar tiempo). `/calibrar` redirige a `/tarea1#libre`. Sigue T1.3.1 (`herramientas/tarea1_descargar.py`).
 
 ## Objetivos del curso (en orden)
@@ -110,7 +125,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 - Entregable: reporte PDF, video con el monitor serie mostrando las etiquetas, fotos y enlace a GitHub.
 - Rúbrica: +10 puntos extra por el giro de 360°.
-- Siguiente asignación: `docs/Asignaciones/Tarea_ESP32CAM_EdgeImpulse.docx` apareció en la carpeta el 2026-11-03, todavía sin commit y sin revisar. Por el nombre, trata de visión con Edge Impulse en el ESP32-CAM.
+- Siguiente asignación (Tarea 5 del curso): `docs/Asignaciones/Tarea_ESP32CAM_EdgeImpulse.docx`; ver el estado de la Tarea 5 arriba.
 
 ### Estado de la Tarea 1
 
@@ -122,7 +137,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
     - `datos_t1.h/.cpp`: LittleFS con `/t1.json` y respaldo `/t1.bak` (escritura segura vía `/t1.new`). Endpoints `GET/POST /t1/datos` (máx. 32 KB, 413 si se pasa) y `GET /t1/respaldo`. El esquema de particiones por defecto del fqbn `esp32cam` ya es `huge_app` (3 MB de app y 1 MB para datos), así que no hace falta cambiar opciones.
     - `/capture` registrado (QVGA 320×240, `vflip = 1`, igual que el video).
     - `max_uri_handlers = 32` (antes 24).
-  - `herramientas/reporte_pdf.py` acepta la ruta de otro `.md` como argumento (sin argumento genera el de la Tarea 1). Probado con el reporte de la Tarea 1 y con un `.md` de prueba; el de la Tarea 2 aún no existe.
+  - `herramientas/reporte_pdf.py` acepta la ruta de otro `.md` como argumento (sin argumento genera el de la Tarea 1). Probado con el reporte de la Tarea 1 y con un `.md` de prueba; el de la Tarea 5 se genera con `herramientas/tarea2/reporte_tarea2.py` (Word por COM), no con este script.
 - **Parte B hecha (2026-11-02):**
   - `mot` confirma que GPIO12/13 son el lado izquierdo y que los cuatro sentidos son correctos.
   - PWM mínimo con el criterio "giran las dos llantas": izquierdo 69.3 ± 1.9, derecho 79.3 ± 8.9 (n = 7 por lado; Welch p = 0.024). El lado derecho tiene más fricción estática (valores de 70 u 85–90, arranque brusco). Los resultados ya están en `REPORTE.md` §6.1.
@@ -157,6 +172,8 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 ### Estado de git
 
+- **2026-11-08:** `0d166b9` (Tarea 5: dataset v3, entrenamientos, 45 pruebas y herramientas), `6fba6fa` (`deteccion_ei` con librería real, color corregido y gestos) y un commit de documentos (reporte, anexos, propuesta, README y este archivo; ver `git log`). Hechos en local; el push a `origin/main` queda a decisión de Fer. Los ZIP `MODELO*.zip` y `ei-*.zip` se ignoran en git.
+
 - **2026-11-06:** `e5cd415` (página `/calibrar` y enunciado de la Tarea 2) y `dc73e0f` (`reporte_pdf.py` con argumento), ambos en `origin/main`. Después, `05dfbaa` (T1.1: `t90d`, `datos_t1.*`, `/capture`) también está en `origin/main`.
 - Después del PR, Fer subió desde la PC de escritorio el arreglo de la cámara, la Parte B, la exportación a PDF y la actualización de CLAUDE.md (commits `d19a491` a `7cecd02`).
 - `030265f` (2026-11-03): corrección de la normalidad en la Parte B, `reporte_pdf.py` también usa Chrome (la máquina `Admin` no tiene Edge), y CLAUDE.md al día.
@@ -173,7 +190,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 - **arduino-cli:**
   - PC de escritorio: `C:/Users/feraz/AppData/Local/Programs/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe` (versión 1.5.1). El core esp32 3.3.12 está instalado en `%LOCALAPPDATA%\Arduino15`. El ESP32-CAM-MB aparece en COM8 y la subida con reinicio automático funciona sin presionar IO0. Conviene compilar con `--build-path` fuera de Google Drive.
   - Máquina `Admin`: `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`. Aquí el core instalado es el **3.1.0** (no el 3.3.12), y compila igual. El robot aparece en **COM7**. Compilar con `--build-path "$TEMP/build_robot"`; subir con `upload -p COM7 --input-dir "$TEMP/build_robot"`. La compilación tarda varios minutos y alguna vez falla sin mensaje (`exit status 1`); repetirla suele bastar.
-- **Edge Impulse (Tarea 2):** proyecto público https://studio.edgeimpulse.com/public/1159326/live (creado por Fer el 2026-11-07). El CLI se instaló en la PC de escritorio con `npm install -g edge-impulse-cli --ignore-scripts`: con Node 26 el build normal falla (`@serialport/bindings` necesita Visual Studio) y el uploader no usa serialport. Falta que Fer inicie sesión con `edge-impulse-uploader --clean`.
+- **Edge Impulse (Tarea 2):** proyecto público https://studio.edgeimpulse.com/public/1159326/live (creado por Fer el 2026-11-07). El CLI se instaló en la PC de escritorio con `npm install -g edge-impulse-cli --ignore-scripts`: con Node 26 el build normal falla (`@serialport/bindings` necesita Visual Studio) y el uploader no usa serialport. Fer ya inició sesión (2026-11-08); si el uploader pide proyecto, elegir `igream / Tarea2 Objetos`.
 - **Driver CH340:** instalado en la PC de escritorio. COM3 y COM4 son Bluetooth, no la placa.
 - **Python del sistema:** 3.14. En la PC de escritorio ya tiene numpy, scipy, matplotlib y pyserial. En la máquina `Admin` no tiene scipy y las librerías están en `.venv`.
 - **Git Bash:** los heredocs alteran las barras invertidas (`\n`, `\r\n`) en scripts de Python; aplicar parches con el editor de archivos evita ese problema.
