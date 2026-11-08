@@ -195,7 +195,7 @@ Se construye sobre `calibracion_html.h` (misma estética oscura, móvil primero,
 
 ## T1.3 Utilidades en la PC y reporte
 
-- [ ] **T1.3.1 [Sonnet] `herramientas/tarea1_descargar.py`.**
+- [x] **T1.3.1 [Sonnet] `herramientas/tarea1_descargar.py`.**
   - Baja `http://192.168.4.1/t1/datos` a `docs/Tarea1/datos/tarea1.json`.
   - Genera `docs/Tarea1/datos/resultados.md` con las mismas cuentas de E4, para que los resultados queden en el repo y se puedan revisar sin el robot.
   - Solo usa la biblioteca estándar.

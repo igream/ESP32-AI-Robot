@@ -27,6 +27,16 @@ con las mismas columnas que `calibrar.py`. Muestra un resumen (n, media, DE) por
 Al terminar, **Descargar CSV** (o **Ver / copiar CSV**), guárdalo como `herramientas/datos/pruebas.csv` y corre `python calibrar.py analizar`.
 Los datos viven en el navegador del celular: descarga el CSV antes de borrar datos del navegador.
 
+## Datos de la Tarea 1 (página `/tarea1`)
+
+La página `/tarea1` guarda sus datos en el robot. Con la PC en el WiFi `ESP32Car_Fer`:
+
+```bash
+python herramientas/tarea1_descargar.py
+```
+
+Genera en `docs/Tarea1/datos/` el `tarea1.json`, el `resultados.md` (mismas cuentas que la etapa E4) y `pruebas.csv` (columnas de `calibrar.py`). Con `--archivo ruta.json` se usa un JSON descargado de la página, sin robot. Solo usa la biblioteca estándar.
+
 ## Protocolo de medición sugerido
 
 Material: cinta métrica, cinta de color en el piso (línea de 1 m y una cruz de ángulos) y multímetro para la batería.
