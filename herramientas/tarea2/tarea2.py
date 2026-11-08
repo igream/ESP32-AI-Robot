@@ -19,6 +19,7 @@ Requiere: pyserial, numpy, scipy, matplotlib.
 import argparse
 import csv
 import json
+import os
 import math
 import random
 import shutil
@@ -412,14 +413,24 @@ def cmd_subir(a):
             fotos = sorted((ruta("dataset") / o).glob("*.jpg"))
             if len(fotos) < MIN_FOTOS:
                 sys.exit(f"{o}: solo {len(fotos)} fotos (minimo {MIN_FOTOS}).")
-            cmd = [up or "edge-impulse-uploader", "--category", "split", "--label", o] + [str(x) for x in fotos]
             print(f"{o}: {len(fotos)} fotos -> edge-impulse-uploader --category split --label {o} ...")
             if a.simulacro:
                 continue
-            r = subprocess.run(cmd, capture_output=True, text=True)
-            log.write(f"\n=== {datetime.now().isoformat(timespec='seconds')} {o} (codigo {r.returncode})\n{r.stdout}\n{r.stderr}\n")
+            # En Windows la linea de comandos tiene limite: se usa la carpeta del objeto como
+            # directorio de trabajo y solo los nombres de archivo (no las rutas completas).
+            # El uploader pregunta a que proyecto subir: se deja la terminal conectada para
+            # contestar ahi (elige tu proyecto). Con la variable de entorno EI_API_KEY
+            # (clave del proyecto, Dashboard -> Keys) no pregunta.
+            cmd = [up, "--category", "split", "--label", o]
+            if os.environ.get("EI_API_KEY"):
+                cmd += ["--api-key", os.environ["EI_API_KEY"]]
+            cmd += [x.name for x in fotos]
+            r = subprocess.run(cmd, cwd=str(ruta("dataset") / o))
+            log.write(f"=== {datetime.now().isoformat(timespec='seconds')} {o}: {len(fotos)} fotos (codigo {r.returncode})\n")
+            log.flush()
             if r.returncode != 0:
-                sys.exit(f"Fallo la subida de {o}; revisa {ruta('subida.log')}")
+                sys.exit(f"Fallo la subida de {o} (codigo {r.returncode}).")
+            print(f"  {o}: {len(fotos)} fotos subidas")
     if not a.simulacro:
         est = leer_json("estado.json", {})
         est["subido"] = True
