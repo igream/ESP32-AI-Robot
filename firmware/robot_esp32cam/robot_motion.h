@@ -35,7 +35,8 @@ struct RobotConfig {
   float    trim_der;     // Factor de correccion del lado derecho (0.5-1.0)
   uint32_t t_adelante;   // ms de "adelante" en la secuencia de la tarea
   uint32_t t_atras;      // ms de "atras" en la secuencia de la tarea
-  uint32_t t_giro90;     // ms para girar ~90 grados
+  uint32_t t_giro90;     // ms para girar ~90 grados a la izquierda
+  uint32_t t_giro90_der; // ms para girar ~90 grados a la derecha (el lado derecho tiene mas friccion)
   uint32_t t_giro360;    // ms para girar ~360 grados
   // Resultado de la regresion lineal (script calibrar.py):
   //   distancia = v_cm_s * t + b_cm      angulo = w_deg_s * t + b_deg

@@ -28,6 +28,10 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
   - Dataset capturado desde la PC por WiFi, sin Eloquent.
   - Subida con Edge Impulse CLI.
   - Datos de la Tarea 1 guardados en LittleFS del robot.
+- **Avance del plan (2026-11-07):**
+  - Paso 0 completo (0.1 y 0.2), con push a `origin/main`.
+  - T1.1.1 (`t90d`), T1.1.2 (LittleFS y endpoints `/t1/*`) y T1.1.3 (`/capture` registrado) están **escritos y compilan, pero sin commit, sin subir al robot y sin probar**. Es lo primero que hay que hacer al retomar: subir, probar y hacer commit.
+  - Sigue T1.2 (página `/tarea1`, nuevo `tarea1_html.h`), que depende de lo anterior.
 
 ## Objetivos del curso (en orden)
 
@@ -43,6 +47,8 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
 - **Placa:** ESP32-CAM AI-Thinker con cámara OV3660, programada con la ESP32-CAM-MB (CH340).
 - **Motores:** driver L298N con 4 motores TT amarillos. Los 2 motores de cada lado van en paralelo, así que el robot se comporta como diferencial aunque gire derrapando (skid-steer).
 - **Alimentación:** 3 × 18650 (9–12.6 V). El regulador del L298N da 5 V al ESP32-CAM.
+  - Con las baterías bajas, al quitar el USB la ESP32-CAM se reinicia en bucle (brownout) y al final se apaga. El LED rojo (GPIO33) lo enciende el firmware una sola vez al terminar de arrancar y no parpadea; si parpadea, son reinicios.
+  - Por ahora las pruebas usan una **fuente externa conectada al portapilas** (máximo 12.6 V). Anotar su voltaje en cada prueba: los tiempos calibrados solo valen para ese voltaje. Recargar las baterías cuando se pueda.
 - **Pines:**
 
 | Pin | Función |
@@ -104,6 +110,14 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 ### Estado de la Tarea 1
 
 - **Firmware** (`firmware/robot_esp32cam/`): compila sin errores ni avisos con el core ESP32 3.3.12 (fqbn `esp32:esp32:esp32cam`; el IDE actualizó el core desde 3.1.0). Usa 33 % de flash y 20 % de RAM. **Subido al robot el 2026-11-02** por COM8: arranca con PSRAM, cámara, AP y servidor web. Para eso, `camera_config_t` se inicializa en ceros y fija `fb_location`/`grab_mode`; antes, con campos sin inicializar, fallaba con `frame buffer malloc failed`. Si la cámara falla, el WiFi y los motores siguen funcionando.
+- **Cambios posteriores (2026-11-06 y 2026-11-07):**
+  - **Página `/calibrar`** (`calibracion_html.h`, ya en `main`, subida al robot por COM7 y probada por Fer): ejecuta un movimiento, pide la medición y la guarda en `localStorage` con las columnas de `calibrar.py`; resumen n/media/DE y exportación a CSV. Tipos: adelante, atrás, giro izquierda, giro derecha e ida y vuelta (el 360° es giro izquierda con ≈ `t360`). El botón **Calibrar** de la página principal la abre. Será la sección "Prueba libre" de `/tarea1`.
+  - **Sin commit todavía (compila, 35 % de flash):**
+    - `t90d`: tiempo de giro derecho propio (`t_giro90_der` en `RobotConfig`, clave serie/HTTP `t90d`, valor inicial 500). Lo usan la secuencia (segmento 4), el comando serie `d` y `/config`. Como cambia el tamaño de `RobotConfig`, la calibración guardada en NVS vuelve una vez a los valores de fábrica.
+    - `datos_t1.h/.cpp`: LittleFS con `/t1.json` y respaldo `/t1.bak` (escritura segura vía `/t1.new`). Endpoints `GET/POST /t1/datos` (máx. 32 KB, 413 si se pasa) y `GET /t1/respaldo`. El esquema de particiones por defecto del fqbn `esp32cam` ya es `huge_app` (3 MB de app y 1 MB para datos), así que no hace falta cambiar opciones.
+    - `/capture` registrado (QVGA 320×240, `vflip = 1`, igual que el video).
+    - `max_uri_handlers = 32` (antes 24).
+  - `herramientas/reporte_pdf.py` acepta la ruta de otro `.md` como argumento (sin argumento genera el de la Tarea 1). Probado con el reporte de la Tarea 1 y con un `.md` de prueba; el de la Tarea 2 aún no existe.
 - **Parte B hecha (2026-11-02):**
   - `mot` confirma que GPIO12/13 son el lado izquierdo y que los cuatro sentidos son correctos.
   - PWM mínimo con el criterio "giran las dos llantas": izquierdo 69.3 ± 1.9, derecho 79.3 ± 8.9 (n = 7 por lado; Welch p = 0.024). El lado derecho tiene más fricción estática (valores de 70 u 85–90, arranque brusco). Los resultados ya están en `REPORTE.md` §6.1.
@@ -129,15 +143,16 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
   - Estadística: descriptiva con IC95 t, Shapiro-Wilk, atípicos IQR, tamaño de muestra, t de una muestra de la desviación normalizada a 1 m (recorridos de 30 cm o más), regresión tiempo → distancia/ángulo, L efectiva y factor de derrape, t de Welch, Pearson voltaje–residuo y ANOVA por superficie.
   - Probado de punta a punta solo con datos simulados.
   - En la máquina `Admin` usa el entorno `.venv` (numpy 2.5, scipy 1.18, matplotlib 3.11), que está en `.gitignore`. En la PC de escritorio corre con el Python del sistema; se probó con `--simular` el 2026-11-02.
-- **Reporte** (`docs/Tarea1/REPORTE.md`, exportado a `REPORTE.pdf` con `herramientas/reporte_pdf.py`):
+- **Reporte** (`docs/Tarea1/REPORTE.md`, exportado a `REPORTE.pdf` con `python herramientas/reporte_pdf.py [ruta.md]`):
   - Ya incluye conexiones, diagrama Mermaid, diseño del PWM, código, la Parte B llena y problemas y soluciones.
   - Por llenar: tiempos calibrados de la Parte C, la tabla de la Parte D (3 repeticiones), los huecos `___` de la Parte E, fecha, fotos y conclusiones.
   - Se eligió la ruta mínima: la Parte D con 3 repeticiones, sin la sección de análisis estadístico extra de `calibrar.py`.
 - **Pendientes y decisiones:** `docs/PENDIENTES.md`.
-- **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la batería, barridos y validación.
+- **Mediciones pendientes:** L (distancia entre llantas izquierda y derecha), distancia entre ejes, diámetro de llanta, voltaje de la fuente o batería (en reposo y con motores girando), barridos y validación. Se harán con la app `/tarea1` (T1.2).
 
 ### Estado de git
 
+- **2026-11-06:** `e5cd415` (página `/calibrar` y enunciado de la Tarea 2) y `dc73e0f` (`reporte_pdf.py` con argumento), ambos en `origin/main`. Tras ellos, `datos_t1.*`, `t90d` y los cambios de `app_httpd.cpp`, `robot_motion.*` quedan sin commit.
 - Después del PR, Fer subió desde la PC de escritorio el arreglo de la cámara, la Parte B, la exportación a PDF y la actualización de CLAUDE.md (commits `d19a491` a `7cecd02`).
 - `030265f` (2026-11-03): corrección de la normalidad en la Parte B, `reporte_pdf.py` también usa Chrome (la máquina `Admin` no tiene Edge), y CLAUDE.md al día.
 - `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
@@ -152,7 +167,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 - **Sistema:** Windows 11, con Git Bash y PowerShell.
 - **arduino-cli:**
   - PC de escritorio: `C:/Users/feraz/AppData/Local/Programs/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe` (versión 1.5.1). El core esp32 3.3.12 está instalado en `%LOCALAPPDATA%\Arduino15`. El ESP32-CAM-MB aparece en COM8 y la subida con reinicio automático funciona sin presionar IO0. Conviene compilar con `--build-path` fuera de Google Drive.
-  - Máquina `Admin`: `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`.
+  - Máquina `Admin`: `C:/Program Files/Arduino IDE/resources/app/lib/backend/resources/arduino-cli.exe`. Aquí el core instalado es el **3.1.0** (no el 3.3.12), y compila igual. El robot aparece en **COM7**. Compilar con `--build-path "$TEMP/build_robot"`; subir con `upload -p COM7 --input-dir "$TEMP/build_robot"`. La compilación tarda varios minutos y alguna vez falla sin mensaje (`exit status 1`); repetirla suele bastar.
 - **Driver CH340:** instalado en la PC de escritorio. COM3 y COM4 son Bluetooth, no la placa.
 - **Python del sistema:** 3.14. En la PC de escritorio ya tiene numpy, scipy, matplotlib y pyserial. En la máquina `Admin` no tiene scipy y las librerías están en `.venv`.
 - **Git Bash:** los heredocs alteran las barras invertidas (`\n`, `\r\n`) en scripts de Python; aplicar parches con el editor de archivos evita ese problema.

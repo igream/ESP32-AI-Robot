@@ -12,6 +12,7 @@
 
 #include "robot_motion.h"   // control de motores (antes estaba en este archivo)
 #include "calibracion_html.h"   // pagina /calibrar
+#include "datos_t1.h"           // datos de la Tarea 1 en LittleFS
 
 // 1 = imprime los FPS de cada cuadro del video en el monitor serie
 #define LOG_STREAM 0
@@ -463,6 +464,39 @@ static esp_err_t calibrar_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html; charset=utf-8");
     return httpd_resp_send(req, CALIBRAR_HTML, HTTPD_RESP_USE_STRLEN);
 }
+// --- Datos de la Tarea 1 (LittleFS) ---
+//   GET  /t1/datos     documento JSON guardado ({} si no hay)
+//   POST /t1/datos     guarda el cuerpo (max 32 KB); respalda el anterior en /t1.bak
+//   GET  /t1/respaldo  documento anterior
+static esp_err_t enviar_json_texto(httpd_req_t *req, const String &s, const char *vacio) {
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    if (s.length() == 0) return httpd_resp_send(req, vacio, HTTPD_RESP_USE_STRLEN);
+    return httpd_resp_send(req, s.c_str(), s.length());
+}
+static esp_err_t t1_get_handler(httpd_req_t *req)      { return enviar_json_texto(req, datos_t1_leer("/t1.json"), "{}"); }
+static esp_err_t t1_respaldo_handler(httpd_req_t *req) { return enviar_json_texto(req, datos_t1_leer("/t1.bak"), "{}"); }
+static esp_err_t t1_post_handler(httpd_req_t *req) {
+    size_t total = req->content_len;
+    if (total == 0 || total > T1_MAX_BYTES) {
+        httpd_resp_set_status(req, "413 Payload Too Large");
+        return responder_json(req, "{\"ok\":false,\"error\":\"cuerpo vacio o mayor de 32 KB\"}");
+    }
+    uint8_t *buf = (uint8_t *)malloc(total);
+    if (!buf) return responder_ok(req, false, "sin memoria");
+    size_t recibidos = 0;
+    while (recibidos < total) {
+        int r = httpd_req_recv(req, (char *)buf + recibidos, total - recibidos);
+        if (r == HTTPD_SOCK_ERR_TIMEOUT) continue;
+        if (r <= 0) { free(buf); return ESP_FAIL; }
+        recibidos += r;
+    }
+    bool ok = datos_t1_guardar(buf, total);
+    free(buf);
+    if (!ok) return responder_ok(req, false, "no se pudo escribir");
+    return responder_json(req, String("{\"ok\":true,\"bytes\":") + total + "}");
+}
+
 static esp_err_t seq_handler(httpd_req_t *req)       { return responder_ok(req, robot_secuencia_tarea(), "cola llena"); }
 static esp_err_t mot_handler(httpd_req_t *req)       { return responder_ok(req, robot_prueba_motores(), "cola llena"); }
 static esp_err_t g360_handler(httpd_req_t *req)      { return responder_ok(req, girar360(), "cola llena"); }
@@ -498,7 +532,7 @@ static esp_err_t ir_handler(httpd_req_t *req) {
 
 static esp_err_t config_handler(httpd_req_t *req) {
     static const char *claves[] = {"pwm", "pwm_giro", "pwm_max", "trim_i", "trim_d", "t_adelante",
-                                   "t_atras", "t90", "t360", "v", "b", "w", "bg"};
+                                   "t_atras", "t90", "t90d", "t360", "v", "b", "w", "bg"};
     for (const char *k : claves) {
         float v;
         if (query_float(req, k, &v) && !robot_set_param(k, v)) {
@@ -510,7 +544,7 @@ static esp_err_t config_handler(httpd_req_t *req) {
 
 void startCameraServer(){
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 24;   // el valor por defecto (8) no alcanza
+    config.max_uri_handlers = 32;   // el valor por defecto (8) no alcanza
 
     httpd_uri_t go_uri = {
         .uri       = "/go",
@@ -597,6 +631,7 @@ void startCameraServer(){
     };
 
 
+    datos_t1_begin();
     ra_filter_init(&ra_filter, 20);
     Serial.printf("Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
@@ -608,11 +643,15 @@ void startCameraServer(){
         httpd_register_uri_handler(camera_httpd, &right_uri);
         httpd_register_uri_handler(camera_httpd, &ledon_uri);
         httpd_register_uri_handler(camera_httpd, &ledoff_uri);
+        httpd_register_uri_handler(camera_httpd, &capture_uri);   // foto JPEG (la usa la Tarea 2)
 
         // Endpoints de calibracion
         static httpd_uri_t extra[] = {
             {.uri = "/move",      .method = HTTP_GET, .handler = move_handler,      .user_ctx = NULL},
             {.uri = "/calibrar",  .method = HTTP_GET, .handler = calibrar_handler,  .user_ctx = NULL},
+            {.uri = "/t1/datos",  .method = HTTP_GET,  .handler = t1_get_handler,      .user_ctx = NULL},
+            {.uri = "/t1/datos",  .method = HTTP_POST, .handler = t1_post_handler,     .user_ctx = NULL},
+            {.uri = "/t1/respaldo", .method = HTTP_GET, .handler = t1_respaldo_handler, .user_ctx = NULL},
             {.uri = "/seq",       .method = HTTP_GET, .handler = seq_handler,       .user_ctx = NULL},
             {.uri = "/mot",       .method = HTTP_GET, .handler = mot_handler,       .user_ctx = NULL},
             {.uri = "/pwmmin",    .method = HTTP_GET, .handler = pwmmin_handler,    .user_ctx = NULL},

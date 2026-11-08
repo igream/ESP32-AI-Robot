@@ -247,7 +247,7 @@ static void imprimir_ayuda() {
   Serial.println(F(
     "\n=== Comandos del robot ===\n"
     "a [ms] / r [ms]      adelante / atras (sin ms: usa t_adelante / t_atras)\n"
-    "i [ms] / d [ms]      giro izquierda / derecha (sin ms: usa t90)\n"
+    "i [ms] / d [ms]      giro izquierda / derecha (sin ms: usa t90 / t90d)\n"
     "g                    giro de 360 grados (usa t360)\n"
     "m IZQ DER MS         motores con PWM por lado (-255..255) durante MS\n"
     "seq                  secuencia de la tarea (Parte C)\n"
@@ -262,7 +262,7 @@ static void imprimir_ayuda() {
     "cfg / estado         ver configuracion / estado (JSON)\n"
     "set CLAVE VALOR      cambia y guarda un parametro. Claves:\n"
     "                     pwm pwm_giro pwm_max trim_i trim_d t_adelante\n"
-    "                     t_atras t90 t360 v b w bg\n"
+    "                     t_atras t90 t90d t360 v b w bg\n"
     "reset_cfg            vuelve a la configuracion de fabrica\n"));
 }
 
@@ -280,7 +280,7 @@ static void ejecutar_linea(char* linea) {
   else if (!strcmp(cmd, "a"))   robot_mover( cfg.pwm_avance,  cfg.pwm_avance, ms_o(cfg.t_adelante), "Adelante");
   else if (!strcmp(cmd, "r"))   robot_mover(-cfg.pwm_avance, -cfg.pwm_avance, ms_o(cfg.t_atras), "Atras");
   else if (!strcmp(cmd, "i"))   robot_mover(-cfg.pwm_giro,    cfg.pwm_giro,   ms_o(cfg.t_giro90), "Izquierda");
-  else if (!strcmp(cmd, "d"))   robot_mover( cfg.pwm_giro,   -cfg.pwm_giro,   ms_o(cfg.t_giro90), "Derecha");
+  else if (!strcmp(cmd, "d"))   robot_mover( cfg.pwm_giro,   -cfg.pwm_giro,   ms_o(cfg.t_giro90_der), "Derecha");
   else if (!strcmp(cmd, "g"))   girar360();
   else if (!strcmp(cmd, "m") && n == 4) robot_mover((int)a, (int)b, (uint32_t)c, "Manual");
   else if (!strcmp(cmd, "seq")) robot_secuencia_tarea();
@@ -338,6 +338,7 @@ void robot_config_default() {
   cfg.t_adelante = 2000;
   cfg.t_atras    = 2000;
   cfg.t_giro90   = 500;
+  cfg.t_giro90_der = 500;
   cfg.t_giro360  = 1800;
   cfg.v_cm_s  = 0; cfg.b_cm  = 0;
   cfg.w_deg_s = 0; cfg.b_deg = 0;
@@ -452,7 +453,7 @@ bool robot_secuencia_tarea() {
   llenar_segmento(c.seg[1], "1 Adelante",     p,  p, cfg.t_adelante, 1000);
   llenar_segmento(c.seg[2], "2 Atras",       -p, -p, cfg.t_atras,    1000);
   llenar_segmento(c.seg[3], "3 Izquierda 90",-g,  g, cfg.t_giro90,   1000);
-  llenar_segmento(c.seg[4], "4 Derecha 90",   g, -g, cfg.t_giro90,   1000);
+  llenar_segmento(c.seg[4], "4 Derecha 90",   g, -g, cfg.t_giro90_der, 1000);
   llenar_segmento(c.seg[5], "5 Giro 360",    -g,  g, cfg.t_giro360,  0);
   return encolar(c);
 }
@@ -547,6 +548,7 @@ bool robot_set_param(const char* k, float v) {
   else if (!strcmp(k, "t_adelante") && v > 0) cfg.t_adelante = (uint32_t)v;
   else if (!strcmp(k, "t_atras")    && v > 0) cfg.t_atras    = (uint32_t)v;
   else if (!strcmp(k, "t90")        && v > 0) cfg.t_giro90   = (uint32_t)v;
+  else if (!strcmp(k, "t90d")       && v > 0) cfg.t_giro90_der = (uint32_t)v;
   else if (!strcmp(k, "t360")       && v > 0) cfg.t_giro360  = (uint32_t)v;
   else if (!strcmp(k, "v")  && v >= 0) cfg.v_cm_s  = v;
   else if (!strcmp(k, "b"))            cfg.b_cm    = v;
@@ -559,14 +561,14 @@ bool robot_set_param(const char* k, float v) {
 }
 
 String robot_config_json() {
-  char b[400];
+  char b[480];
   snprintf(b, sizeof(b),
     "{\"pwm\":%d,\"pwm_giro\":%d,\"pwm_max\":%d,\"trim_i\":%.3f,\"trim_d\":%.3f,"
-    "\"t_adelante\":%lu,\"t_atras\":%lu,\"t90\":%lu,\"t360\":%lu,"
+    "\"t_adelante\":%lu,\"t_atras\":%lu,\"t90\":%lu,\"t90d\":%lu,\"t360\":%lu,"
     "\"v\":%.3f,\"b\":%.3f,\"w\":%.3f,\"bg\":%.3f,\"pwm_hz\":%lu}",
     cfg.pwm_avance, cfg.pwm_giro, cfg.pwm_max, cfg.trim_izq, cfg.trim_der,
     (unsigned long)cfg.t_adelante, (unsigned long)cfg.t_atras,
-    (unsigned long)cfg.t_giro90, (unsigned long)cfg.t_giro360,
+    (unsigned long)cfg.t_giro90, (unsigned long)cfg.t_giro90_der, (unsigned long)cfg.t_giro360,
     cfg.v_cm_s, cfg.b_cm, cfg.w_deg_s, cfg.b_deg, (unsigned long)PWM_FRECUENCIA_HZ);
   return String(b);
 }
