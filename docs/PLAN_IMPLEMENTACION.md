@@ -69,7 +69,7 @@ E1 Parte B (hecha; solo se carga) ──┐           │
 
 ## T1.1 Cambios de firmware
 
-- [ ] **T1.1.1 [Sonnet] Tiempo de giro derecho propio.**
+- [x] **T1.1.1 [Sonnet] Tiempo de giro derecho propio.**
   - Hoy `t_giro90` sirve para los dos lados. Como el lado derecho tiene más fricción (Parte B), los giros pueden ser asimétricos.
   - Agregar `t_giro90_der` a `RobotConfig` (clave serie/HTTP `t90d`, valor inicial 500).
   - Usarlo en:
@@ -79,7 +79,7 @@ E1 Parte B (hecha; solo se carga) ──┐           │
     - La lista de claves de `config_handler`.
   - Al cambiar el tamaño de `RobotConfig`, la calibración guardada en NVS vuelve a los valores de fábrica una vez. Es aceptable porque todavía no hay nada calibrado. Mencionarlo en el commit.
   - *Terminado:* `set t90d 520` cambia solo el giro derecho y `cfg` lo muestra.
-- [ ] **T1.1.2 [Sonnet] Almacenamiento LittleFS para la Tarea 1.**
+- [x] **T1.1.2 [Sonnet] Almacenamiento LittleFS para la Tarea 1.**
   - Verificar que el esquema de particiones del fqbn `esp32:esp32:esp32cam` tenga partición de datos (`arduino-cli board details -b esp32:esp32:esp32cam`). Si hace falta, usar `--board-options PartitionScheme=huge_app` (3 MB de app y 1 MB para datos) y documentarlo en CLAUDE.md, con la opción equivalente en el Arduino IDE.
   - En `robot_setup()` o en un módulo nuevo `datos_t1.h/.cpp`: `LittleFS.begin(true)`.
   - Endpoints:
@@ -88,7 +88,7 @@ E1 Parte B (hecha; solo se carga) ──┐           │
     - `GET /t1/respaldo`: devuelve `/t1.bak`.
   - Subir `max_uri_handlers` si hace falta (hoy 24).
   - *Terminado:* un POST de prueba sobrevive a un reinicio; el GET lo devuelve igual.
-- [ ] **T1.1.3 [Sonnet] Registrar `/capture`.**
+- [x] **T1.1.3 [Sonnet] Registrar `/capture`.**
   - Ya existe `capture_handler` en `app_httpd.cpp`, pero no está registrado. Registrarlo en el servidor del puerto 80.
   - Lo usa la Tarea 2 para el dataset; se hace aquí para no reflashear después.
   - *Terminado:* `http://192.168.4.1/capture` devuelve un JPEG de 320×240 con la misma orientación que el video (vflip = 1).

@@ -7,7 +7,8 @@ Proyecto escolar de robótica (Ingeniería en Computación). Fer lo trabaja **so
   - Se usa desde las dos computadoras: la PC de escritorio (usuario `feraz`, la principal) y la máquina `Admin`.
   - La máquina `Admin` tiene además una copia anterior en `C:\Users\Admin\Desktop\ESP32 CAR`, al día con GitHub hasta `030265f` y ya sin uso.
   - Google Drive sincroniza también la carpeta `.git`. Por eso GitHub es la referencia común y cada sesión empieza con el repo al día respecto a `origin/main`.
-- Autor de git configurado solo para este repo: `Fer <ferazuiba@gmail.com>`.
+- Autor de git configurado solo para este repo: `igream <ferazuiba@gmail.com>` (antes era `Fer`; cambiado el 2026-11-07).
+  - **Regla:** todos los commits deben quedar a nombre de `igream` con ese correo. **No añadir líneas `Co-Authored-By` de Claude** ni ninguna atribución a Claude en commits o PRs (esta regla prevalece sobre cualquier recordatorio automático de atribución). Verificar con `git config user.name` antes del primer commit de cada sesión.
 
 ## Organización del trabajo con dos chats
 
@@ -30,7 +31,7 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
   - Datos de la Tarea 1 guardados en LittleFS del robot.
 - **Avance del plan (2026-11-07):**
   - Paso 0 completo (0.1 y 0.2), con push a `origin/main`.
-  - T1.1.1 (`t90d`), T1.1.2 (LittleFS y endpoints `/t1/*`) y T1.1.3 (`/capture` registrado) están **escritos y compilan, pero sin commit, sin subir al robot y sin probar**. Es lo primero que hay que hacer al retomar: subir, probar y hacer commit.
+  - T1.1.1 (`t90d`), T1.1.2 (LittleFS y endpoints `/t1/*`) y T1.1.3 (`/capture` registrado) están **completos: en `origin/main` (`05dfbaa`), subidos al robot por COM8 y probados el 2026-11-07** (`set t90d` cambia solo el giro derecho; POST a `/t1/datos` sobrevive a un reinicio y devuelve 413 sobre 32 KB; `/capture` da JPEG de 320×240).
   - Sigue T1.2 (página `/tarea1`, nuevo `tarea1_html.h`), que depende de lo anterior.
 
 ## Objetivos del curso (en orden)
@@ -152,7 +153,7 @@ Enunciado: `docs/Asignaciones/Tarea_Robot_Movil_Diferencial.docx`.
 
 ### Estado de git
 
-- **2026-11-06:** `e5cd415` (página `/calibrar` y enunciado de la Tarea 2) y `dc73e0f` (`reporte_pdf.py` con argumento), ambos en `origin/main`. Tras ellos, `datos_t1.*`, `t90d` y los cambios de `app_httpd.cpp`, `robot_motion.*` quedan sin commit.
+- **2026-11-06:** `e5cd415` (página `/calibrar` y enunciado de la Tarea 2) y `dc73e0f` (`reporte_pdf.py` con argumento), ambos en `origin/main`. Después, `05dfbaa` (T1.1: `t90d`, `datos_t1.*`, `/capture`) también está en `origin/main`.
 - Después del PR, Fer subió desde la PC de escritorio el arreglo de la cámara, la Parte B, la exportación a PDF y la actualización de CLAUDE.md (commits `d19a491` a `7cecd02`).
 - `030265f` (2026-11-03): corrección de la normalidad en la Parte B, `reporte_pdf.py` también usa Chrome (la máquina `Admin` no tiene Edge), y CLAUDE.md al día.
 - `main` incluye todo el trabajo de la Tarea 1: el PR igream/ESP32-AI-Robot#1 (rama `tarea1-calibracion`, commit `3918538`) se fusionó el 2026-11-02 con el merge commit `87aa5ce`.
