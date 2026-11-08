@@ -121,20 +121,20 @@ Se construye sobre `calibracion_html.h` (misma estética oscura, móvil primero,
 
 ### Etapas de la página
 
-- [ ] **T1.2.1 [Sonnet] Estructura.**
+- [x] **T1.2.1 [Sonnet] Estructura.**
   - Pestañas o acordeón: E0, E1, E2, E2b, E3, E4, "Prueba libre" y "Datos".
   - Encabezado con la línea de estado del robot y un botón PARO siempre visible.
   - Cada etapa muestra su estado y qué falta para completarla.
-- [ ] **T1.2.2 [Sonnet] E0 – Medidas físicas.**
+- [x] **T1.2.2 [Sonnet] E0 – Medidas físicas.**
   - Campos: L (3 mediciones, cm), distancia entre ejes (3), diámetro de llanta (3), voltaje en reposo y voltaje con motores girando.
   - Para el voltaje con carga, botón "Girar en el aire 3 s" que llama `/move?l=140&r=140&ms=3000`. Fer mide con el multímetro mientras gira.
   - Muestra el promedio y la DE de cada medida.
   - *Completa cuando:* L tiene 3 valores y los dos voltajes están llenos.
-- [ ] **T1.2.3 [Sonnet] E1 – Parte B.**
+- [x] **T1.2.3 [Sonnet] E1 – Parte B.**
   - Muestra la tabla precargada con media, DE e IC95; los resultados de Welch y Mann-Whitney van como texto fijo, tomado de `REPORTE.md` §6.1.
   - Botones para repetir la rampa (`/pwmmin?lado=I|D` y `/pwmmin_ok`) y agregar valores, por si Fer quiere más repeticiones.
   - Ya está **completa**.
-- [ ] **T1.2.4 [Sonnet] E2 – Parte C: calibrar tiempos.**
+- [x] **T1.2.4 [Sonnet] E2 – Parte C: calibrar tiempos.**
   - Una tarjeta por movimiento, con su objetivo y su tolerancia:
 
 | Movimiento | Objetivo | Tolerancia | Qué mide Fer | Clave de config |
@@ -157,12 +157,12 @@ Se construye sobre `calibracion_html.h` (misma estética oscura, móvil primero,
     6. Entonces se habilita **Aceptar tiempo**, que guarda el valor en `tiempos` y en el robot (`/config?t_adelante=…`).
   - *Completa cuando:* los 5 tiempos están aceptados.
   - 🛑 **Punto de control:** Fer comparte la tabla de E2 (exportada desde "Datos") si algún movimiento no converge en 6 intentos o si R² < 0.9. En ese caso, **[Opus]** revisa.
-- [ ] **T1.2.5 [Sonnet] E2b – Secuencia para el video.**
+- [x] **T1.2.5 [Sonnet] E2b – Secuencia para el video.**
   - Botón **Ejecutar secuencia** (`/seq`), con los tiempos aceptados.
   - Instrucciones: celular grabando el robot, el piso y el monitor serie de la laptop.
   - Casilla "Video grabado".
   - No bloquea E3; solo cuenta para la lista de entregables en E4.
-- [ ] **T1.2.6 [Sonnet] E3 – Parte D: 3 repeticiones.**
+- [x] **T1.2.6 [Sonnet] E3 – Parte D: 3 repeticiones.**
   - Usa **solo** los tiempos aceptados en E2. No se pueden editar aquí; para cambiarlos hay que volver a E2, y la app avisa que las repeticiones hechas quedarían obsoletas.
   - Cinco movimientos × 3 repeticiones:
 
@@ -177,7 +177,7 @@ Se construye sobre `calibracion_html.h` (misma estética oscura, móvil primero,
   - Pide el voltaje de la batería al inicio de cada movimiento (con opción de reutilizar el último).
   - Permite descartar y repetir una repetición.
   - *Completa cuando:* las 15 repeticiones están guardadas.
-- [ ] **T1.2.7 [Sonnet] E4 – Resultados.** Se calcula todo en la página:
+- [x] **T1.2.7 [Sonnet] E4 – Resultados.** Se calcula todo en la página:
   - `v = media(avance adelante en E3) / (media(ms_real)/1000)` [cm/s].
   - `ω_izq = media(ángulo izq) / (t90/1000)`, `ω_der` igual con `t90d`, y `ω_360 = media(ángulo 360) / (t360/1000)` [°/s].
   - Tiempo teórico de 90°: `t90_teo = π·L / (4·v)` [s], con L igual a la media de E0.
@@ -188,7 +188,7 @@ Se construye sobre `calibracion_html.h` (misma estética oscura, móvil primero,
   - Botones:
     - **Copiar Markdown**: tablas con el mismo formato de `docs/Tarea1/REPORTE.md` §6.2, §6.3 y los valores de la Parte E.
     - **Descargar JSON** y **Descargar CSV**. El CSV usa las columnas de `herramientas/calibrar.py` para que `calibrar.py analizar` siga sirviendo.
-- [ ] **T1.2.8 [Sonnet] Sección "Datos".**
+- [x] **T1.2.8 [Sonnet] Sección "Datos".**
   - Tabla de todos los registros, con opción de borrar uno solo (con confirmación).
   - Descargar e importar el JSON.
   - Ver `/t1/respaldo`.

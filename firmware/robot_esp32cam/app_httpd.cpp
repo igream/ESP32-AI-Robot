@@ -11,7 +11,8 @@
 
 
 #include "robot_motion.h"   // control de motores (antes estaba en este archivo)
-#include "calibracion_html.h"   // pagina /calibrar
+#include "calibracion_html.h"   // pagina /calibrar (antigua)
+#include "tarea1_html.h"        // pagina /tarea1
 #include "datos_t1.h"           // datos de la Tarea 1 en LittleFS
 
 // 1 = imprime los FPS de cada cuadro del video en el monitor serie
@@ -358,7 +359,7 @@ page += "<p align=center>";
 page += "<button style=width:110px;height:40px onclick=getsend('seq')><b>Secuencia</b></button>&nbsp;";
 page += "<button style=width:110px;height:40px onclick=getsend('g360')><b>Giro 360</b></button>&nbsp;";
 page += "<button style=width:110px;height:40px onclick=getsend('mot')><b>Prueba motores</b></button>&nbsp;";
-page += "<button style=width:110px;height:40px onclick=\"location='calibrar'\"><b>Calibrar</b></button>";
+page += "<button style=width:110px;height:40px onclick=\"location='tarea1'\"><b>Tarea 1</b></button>";
 page += "</p>";
 page += "<p align=center style=font-family:monospace;font-size:13px id=estado>...</p>";
 page += "<script>setInterval(function(){var r=new XMLHttpRequest();r.onload=function(){try{var e=JSON.parse(r.responseText);"
@@ -460,9 +461,15 @@ static esp_err_t move_handler(httpd_req_t *req) {
     return responder_ok(req, robot_mover((int)l, (int)r, (uint32_t)ms, "Prueba"), "cola llena");
 }
 
+// /calibrar ahora es la seccion "Prueba libre" de /tarea1
 static esp_err_t calibrar_handler(httpd_req_t *req) {
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_set_hdr(req, "Location", "/tarea1#libre");
+    return httpd_resp_send(req, NULL, 0);
+}
+static esp_err_t tarea1_handler(httpd_req_t *req) {
     httpd_resp_set_type(req, "text/html; charset=utf-8");
-    return httpd_resp_send(req, CALIBRAR_HTML, HTTPD_RESP_USE_STRLEN);
+    return httpd_resp_send(req, TAREA1_HTML, HTTPD_RESP_USE_STRLEN);
 }
 // --- Datos de la Tarea 1 (LittleFS) ---
 //   GET  /t1/datos     documento JSON guardado ({} si no hay)
@@ -649,6 +656,7 @@ void startCameraServer(){
         static httpd_uri_t extra[] = {
             {.uri = "/move",      .method = HTTP_GET, .handler = move_handler,      .user_ctx = NULL},
             {.uri = "/calibrar",  .method = HTTP_GET, .handler = calibrar_handler,  .user_ctx = NULL},
+            {.uri = "/tarea1",    .method = HTTP_GET, .handler = tarea1_handler,    .user_ctx = NULL},
             {.uri = "/t1/datos",  .method = HTTP_GET,  .handler = t1_get_handler,      .user_ctx = NULL},
             {.uri = "/t1/datos",  .method = HTTP_POST, .handler = t1_post_handler,     .user_ctx = NULL},
             {.uri = "/t1/respaldo", .method = HTTP_GET, .handler = t1_respaldo_handler, .user_ctx = NULL},
