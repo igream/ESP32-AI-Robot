@@ -207,8 +207,8 @@ static void hacer_gesto(const char *clase) {
     for (int i = 0; i < 2; i++) { mover(P, P, 300); mover(-P, -P, 300); }
   } else if (strcmp(clase, "jarraroja") == 0) {    // negar ("no"): giro izquierda, derecha, izquierda
     mover(-P, P, 250); mover(P, -P, 500); mover(-P, P, 250);
-  } else if (strcmp(clase, "laptop") == 0) {       // celebración: una vuelta en el sitio (tiempo fijo, sin calibrar)
-    mover(-P, P, 1800);
+  } else if (strcmp(clase, "laptop") == 0) {       // celebración: una vuelta en el sitio (t360 calibrado en la Tarea 4: 1740 ms a PWM 140, ~365°)
+    mover(-P, P, 1740);
   }
 }
 

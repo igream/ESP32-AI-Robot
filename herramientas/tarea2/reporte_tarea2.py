@@ -176,6 +176,22 @@ def figura_pruebas(filas):
     return p
 
 
+def figura_montaje():
+    """Tres fotos reales: montaje físico, página de captura y página de pruebas."""
+    nombres = ["T2 Area de trabajo física.jpeg", "T2 Interfaz recoleccion datos.jpeg", "T2 Interfaz testing.jpeg"]
+    configurar_estilo_uaemex(font_size=8.0)
+    fig = plt.figure(figsize=(8, 3.4))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.9, 0.62, 0.62], wspace=0.04)
+    for i, n in enumerate(nombres):
+        ax = fig.add_subplot(gs[i])
+        ax.imshow(mi.imread(str(IMG / n)))
+        ax.axis("off")
+        ax.set_title("abc"[i] + ")", fontsize=8, loc="left")
+    ruta = IMG / "fig_montaje.png"
+    guardar_grafico(fig, str(ruta), dpi=300)
+    return ruta
+
+
 # ------------------------------------------------------------------ documento
 def P(doc, texto, **kw):
     """Párrafo con **negrita** y *cursiva* simples."""
@@ -254,22 +270,24 @@ def construir():
                  ["Total", "180", "—", "143 / 37", "Reparto automático 80 % / 20 % de Edge Impulse"]],
                 anchos_columnas=[0.8, 0.5, 0.7, 0.95, 3.15], pie_tabla="Tabla 1. Dataset final (versión 3) y condiciones de captura.")
     insertar_imagen(doc, str(f1), ancho_pulgadas=5.4, pie_figura="Figura 1. Muestra de cada clase con el recorte central del modelo (líneas amarillas).")
+    insertar_imagen(doc, str(figura_montaje()), ancho_pulgadas=5.6,
+                    pie_figura="Figura 2. Montaje físico (cámara a 10 cm, fondo blanco), página de captura en el celular y página de las 45 pruebas.")
 
     agregar_titulo_seccion(doc, "2.2 Etiquetado y entrenamiento en Edge Impulse", nivel=2)
     P(doc, "Las imágenes se subieron con la CLI de Edge Impulse al proyecto público [enlace en la sección 5] y se etiquetaron con **un cuadro "
            "ajustado por imagen** (el de la jarra incluye la oreja). El impulse recorta al centro y reduce a **96×96 px**, usa el bloque **FOMO "
            "MobileNetV2 0.35** y se entrenó con tasa de aprendizaje 0.001, aumento de datos y cuantización int8. Se usó **RGB** y no escala de grises "
-           "(pregunta 3). El proceso fue iterativo (Tabla 2): con el dataset inicial la laptop se confundía con el fondo (F1 de 0.67); subir los "
+           "(justificación en la sección 4). El proceso fue iterativo (Tabla 2): con el dataset inicial la laptop se confundía con el fondo (F1 de 0.67); subir los "
            "ciclos de 60 a 100 no ayudó, y el diagnóstico apuntó a la captura (laptop demasiado grande y 12 cuadros fuera del recorte), así que se "
            "**recapturó la laptop a 75 cm**. Ya desplegado, la jarra se confundía con el vaso, por lo que se puso **cinta amarilla en la oreja**, se "
-           "recapturaron las 60 fotos de la jarra, se reetiquetaron y se reentrenó. La Figura 2 muestra la matriz de confusión antes y después.")
+           "recapturaron las 60 fotos de la jarra, se reetiquetaron y se reentrenó. La Figura 3 muestra la matriz de confusión antes y después.")
     crear_tabla(doc, ["Iteración", "Cambio", "Ciclos", "F1 validación", "Prueba real (45)"],
                 [["1", "Dataset v1 (laptop a 55 cm)", "60", "90.5 % (laptop 0.67)", "—"],
                  ["2", "Ajuste de un parámetro: más ciclos", "100", "90.0 % (laptop 0.60)", "—"],
                  ["3", "Dataset v2: laptop recapturada a 75 cm", "60 y 100", "100 %", f"{tv}/45 ({100 * tv / 45:.1f} %), con flash"],
                  ["4", "Dataset v3: cinta amarilla en la oreja de la jarra", "60 y 100", "100 %", f"{tn}/45 ({100 * tn / 45:.1f} %), sin flash"]],
                 anchos_columnas=[0.65, 2.65, 0.65, 1.2, 1.0], pie_tabla="Tabla 2. Evolución del modelo. La validación de Edge Impulse usa solo 23 objetos, por lo que no basta para comparar.")
-    insertar_imagen(doc, str(f2), ancho_pulgadas=4.4, pie_figura="Figura 2. Matriz de confusión de validación (%) antes y después del ajuste.")
+    insertar_imagen(doc, str(f2), ancho_pulgadas=4.4, pie_figura="Figura 3. Matriz de confusión de validación (%) antes y después del ajuste.")
 
     agregar_titulo_seccion(doc, "2.3 Despliegue en el ESP32-CAM", nivel=2)
     P(doc, "Se exportó la librería de Arduino (EON Compiler, int8) y se instaló como .ZIP. El sketch `deteccion_ei.ino` captura QVGA con el mismo "
@@ -280,8 +298,11 @@ def construir():
            "llegaba al modelo como azul y no se detectaba nada; se corrigió y se verificó volcando por serie la imagen que ve el modelo; (b) el "
            "destello del LED al detectar iluminaba el cuadro siguiente (el dataset no usó flash) y calentaba el LED, por lo que se desactivó. "
            "Al detectar, el robot **hace un gesto**: si la misma clase domina en 2 de 3 cuadros, el vaso hace que asienta (adelante y atrás), la jarra que niega (giros "
-           "izquierda, derecha, izquierda) y la laptop que gira (unos 1.8 s de tiempo fijo, aún sin calibrar a 360°), con PWM limitado y una pausa de 3 s para no repetirlo. Una página para el celular, servida por el propio ESP32, muestra la foto, la clase detectada y el gesto en curso. No se implementó el reto de la "
-           "pantalla OLED. **[Pendiente: describir la prueba autónoma con power bank y anexar fotos o video.]**")
+           "izquierda, derecha, izquierda) y la laptop que da una vuelta completa (1.74 s, el tiempo de 360° calibrado en la Tarea 4 con PWM 140, unos 365°), con PWM limitado y una pausa de 3 s para no repetirlo. Una página para el celular, servida por el propio ESP32, muestra la foto, la clase detectada y el gesto en curso. **No se implementó el reto de la "
+           "pantalla OLED** (extra opcional) porque el ESP32 sirve su propia página web: el celular se conecta a su red WiFi (`ESP32Det_Fer`) y muestra "
+           "la foto del cuadro, la clase, la probabilidad, el gesto en curso, el contador y el registro de detecciones. Esa pantalla es más grande y "
+           "legible que una OLED de 0.96\", no ocupa los pines I2C (GPIO14 y GPIO15 ya mueven los motores en este robot) y funciona sin computadora. "
+           "**[Pendiente: describir la prueba autónoma con power bank y anexar fotos o video.]**")
 
     agregar_titulo_seccion(doc, "2.4 Pruebas", nivel=2)
     P(doc, "Con el robot conectado por USB, un script lee las líneas seriales y se hicieron **45 pruebas**: por objeto, 10 en la posición del "
@@ -308,7 +329,7 @@ def construir():
     filas.append(["Global", f"{ke}/30", f"{ko}/15", f"{tn}/45", f"{100 * lo:.0f}–{100 * hi:.0f} %", f"{tv}/45"])
     crear_tabla(doc, ["Objeto", "Posición entren.", "Otra pos./luz", "Total", "IC95", "Tanda 1"], filas,
                 anchos_columnas=[1.0, 1.1, 1.0, 0.8, 0.9, 0.8], pie_tabla="Tabla 3. Aciertos por objeto y condición (tanda 1: modelo sin cinta, con flash).")
-    insertar_imagen(doc, str(f3), ancho_pulgadas=5.6, pie_figura="Figura 3. Exactitud por grupo y matriz de confusión de las 45 pruebas reales.")
+    insertar_imagen(doc, str(f3), ancho_pulgadas=5.6, pie_figura="Figura 4. Exactitud por grupo y matriz de confusión de las 45 pruebas reales.")
     fallos = [x for x in nuevas if x["acierto"] != "si"]
     filas_f = [[f"{x['objeto']} {x['prueba']}", x["nota"] or "—", x["etiqueta"].replace("sin_deteccion", "sin detección"),
                 f"{float(x['prob']):.2f}" if x["prob"] else "—"] for x in fallos]
@@ -329,8 +350,12 @@ def construir():
            "distintiva (cinta amarilla en la oreja)** y reentrenar. Esa mejora viene de un marcador añadido y no de un modelo mejor, y el modelo puede "
            "apoyarse en el color de la cinta. La laptop mejoró al recapturarla a 75 cm. Con luz fuerte la jarra se detectó como laptop.")
     P(doc, "**¿Por qué escala de grises y no RGB?** Un cuadro en grises tiene un tercio de los datos de entrada (9,216 contra 27,648 valores), lo que "
-           "reduce memoria y tiempo en un ESP32. En esta práctica se usó RGB y no se midió la versión en grises, por lo que no puedo cuantificar la "
-           "diferencia; el costo medido en RGB fue aceptable (772 ms por clasificación).")
+           "reduce memoria y tiempo en un ESP32, y por eso lo recomienda el enunciado. En esta práctica se usó **RGB** de forma deliberada: (a) los "
+           "objetos se distinguen sobre todo por el **color** (vaso y jarra son rojos, la laptop es negra y la marca que separa vaso de jarra es una cinta "
+           "amarilla), y al pasar a grises el rojo y el amarillo se convierten en tonos parecidos y esa información se pierde; (b) los recursos "
+           "alcanzan con RGB, pues el modelo usa 14 % de la flash, 133 KB de RAM estimados y 772 ms por clasificación, sin llegar a ningún límite del "
+           "ESP32-CAM; y (c) el aumento de tamaño del modelo con RGB afecta solo a la primera capa. No se midió una corrida en grises, así que el "
+           "ahorro y la posible pérdida de exactitud no están cuantificados y quedan como trabajo futuro.")
     P(doc, "**Ventajas de inferencia local.** Menor latencia, porque no hay viaje de ida y vuelta a un servidor; privacidad, porque las imágenes no salen "
            "del dispositivo; funcionamiento sin internet; y menor costo y consumo. A cambio, el modelo debe caber en la memoria y el cómputo del "
            "microcontrolador (1.25 cuadros por segundo en este caso).")
@@ -353,10 +378,11 @@ def construir():
         "Edge Impulse, \u201cAnnouncing Official Support for the Espressif ESP-EYE (ESP32),\u201d 27 abr. 2022. [Online]. Available: "
         "https://www.edgeimpulse.com/blog/announcing-official-support-for-the-espressif-esp-eye-esp32/",
         "Edge Impulse, \u201cAdd Sight to Your ESP32,\u201d 8 sep. 2021. [Online]. Available: https://www.edgeimpulse.com/blog/add-sight-to-your-esp32/",
-        "\u201cTinyML: Tools, Applications, Challenges, and Future Research Directions,\u201d arXiv:2303.13569, 2023. [Online]. Available: "
-        "https://ar5iv.labs.arxiv.org/html/2303.13569",
-        "\u201cA review on TinyML: State-of-the-art and prospects,\u201d J. King Saud Univ. \u2013 Comput. Inf. Sci. [Online]. Available: "
-        "https://www.sciencedirect.com/science/article/pii/S1319157821003335",
+        "R. Kallimani, K. Pai, P. Raghuwanshi, S. Iyer and O. L. A. L\u00f3pez, \u201cTinyML: Tools, applications, challenges, and future research "
+        "directions,\u201d Multimedia Tools and Applications, vol. 83, no. 10, pp. 29015\u201329045, 2024 (publicado en l\u00ednea sep. 2023), "
+        "doi: 10.1007/s11042-023-16740-9.",
+        "P. P. Ray, \u201cA review on TinyML: State-of-the-art and prospects,\u201d J. King Saud Univ. \u2013 Comput. Inf. Sci., vol. 34, no. 4, "
+        "pp. 1595\u20131623, abr. 2022, doi: 10.1016/j.jksuci.2021.11.019.",
     ])
     # [11] se numera aparte para conservar la numeración del enunciado
     agregar_parrafo(doc, [("[11] ", True, False, 8.0),
