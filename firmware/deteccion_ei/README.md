@@ -18,3 +18,7 @@ Depuración: enviar `i` por el serie vuelca la imagen de 96×96 que ve el modelo
 ## Gestos (2026-11-08)
 
 Al detectar una clase en 2 de 3 cuadros seguidos, el robot hace un gesto corto con los motores (PWM 140): vasorojo asiente, jarraroja niega y laptop gira una vuelta (tiempo fijo, sin calibrar). Tras el gesto hay una pausa de 3 s. Salida serie: `GESTO;t;clase`. El comando serie `g` activa o desactiva los gestos (conviene apagarlos en las 45 pruebas si hay baterías conectadas). `USAR_GESTOS 0` en el sketch deja solo la detección. Con las baterías desconectadas los motores no se mueven (solo se probó por serie).
+
+## Página para el celular (2026-11-08)
+
+El detector crea la red `ESP32Det_Fer` (clave `Det12345.`) y sirve una página en `http://192.168.4.1` que solo muestra lo que el robot detecta y hace: la foto del último cuadro, la clase con su probabilidad, el gesto en curso, el contador de gestos y un registro de eventos, con un interruptor para activar o desactivar los gestos. La detección y el gesto ocurren dentro del ESP32, sin PC ni internet. Con la página activa el tiempo por cuadro pasó de 798 a 806 ms. Endpoints: `/` (página), `/estado` (JSON), `/foto` (JPEG) y `/gestos?v=0|1`.

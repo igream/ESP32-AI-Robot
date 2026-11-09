@@ -28,6 +28,9 @@
 #include "modelo_ei.h"                              // librería de Edge Impulse (ver ese archivo)
 #include "edge-impulse-sdk/dsp/image/image.hpp"
 #include "driver/ledc.h"
+#include <WiFi.h>
+#include "esp_http_server.h"
+#include "freertos/semphr.h"
 
 // ---------------- Configuración ----------------
 #define UMBRAL            0.50f   // probabilidad mínima para reportar y para encender el flash
@@ -62,6 +65,28 @@
 
 static uint8_t *bufer_img = nullptr;     // imagen RGB888 decodificada (en PSRAM)
 static unsigned long apagar_flash_en = 0;
+
+// ---------------- Estado compartido con la página del celular ----------------
+// El bucle principal escribe y el servidor HTTP (otra tarea) lee, protegido con un mutex.
+static SemaphoreHandle_t mtx = nullptr;
+static char est_clase[24] = "";          // clase con mayor probabilidad del último cuadro ("" = ninguna)
+static float est_prob = 0;
+static int est_x = 0, est_y = 0, est_ms = 0, est_ngestos = 0;
+static char est_gesto[16] = "";          // gesto en curso ("" = ninguno)
+static char eventos[8][56];              // registro de los últimos eventos (anillo)
+static int n_eventos = 0;
+static const size_t JPG_MAX = 40 * 1024;
+static uint8_t *jpg_buf = nullptr;       // último JPEG de la cámara (lo toma el bucle)
+static uint8_t *jpg_tx = nullptr;        // copia para enviar sin bloquear el bucle
+static size_t jpg_len = 0;
+
+static void registrar(const char *texto) {
+  unsigned long t = millis();
+  xSemaphoreTake(mtx, portMAX_DELAY);
+  snprintf(eventos[n_eventos % 8], sizeof(eventos[0]), "%lu.%lu s  %s", t / 1000, (t % 1000) / 100, texto);
+  n_eventos++;
+  xSemaphoreGive(mtx);
+}
 
 // Entrega al clasificador los píxeles del bufer como floats (0xRRGGBB), como pide Edge Impulse.
 static int obtener_datos(size_t desplazamiento, size_t largo, float *salida) {
@@ -106,6 +131,12 @@ static bool iniciar_camara() {
 static bool capturar_cuadro() {
   camera_fb_t *fb = esp_camera_fb_get();
   if (!fb) return false;
+  if (jpg_buf && fb->len <= JPG_MAX) {     // guarda el JPEG para la página del celular
+    xSemaphoreTake(mtx, portMAX_DELAY);
+    memcpy(jpg_buf, fb->buf, fb->len);
+    jpg_len = fb->len;
+    xSemaphoreGive(mtx);
+  }
   bool ok = fmt2rgb888(fb->buf, fb->len, PIXFORMAT_JPEG, bufer_img);
   esp_camera_fb_return(fb);
   if (!ok) return false;
@@ -197,13 +228,126 @@ static void actualizar_gestos(const char *mejor) {
   for (auto &h : historial) veces += strcmp(h, mejor) == 0;
   if (veces < 2) return;
   Serial.printf("GESTO;%lu;%s\n", millis(), mejor);
+  const char *nombre = strcmp(mejor, "vasorojo") == 0 ? "asiente" : strcmp(mejor, "jarraroja") == 0 ? "niega" : "gira";
+  char linea[56];
+  snprintf(linea, sizeof(linea), "%s: gesto %s", mejor, nombre);
+  registrar(linea);
+  xSemaphoreTake(mtx, portMAX_DELAY);
+  strncpy(est_gesto, nombre, sizeof(est_gesto) - 1);
+  xSemaphoreGive(mtx);
   hacer_gesto(mejor);
+  xSemaphoreTake(mtx, portMAX_DELAY);
+  est_gesto[0] = 0;
+  est_ngestos++;
+  xSemaphoreGive(mtx);
   for (auto &h : historial) h[0] = 0;
   ignorar_hasta = millis() + PAUSA_GESTO_MS;
 }
 
+// ---------------- Página para el celular (punto de acceso propio) ----------------
+// Solo MUESTRA lo que el robot detecta y hace; la detección y el gesto ocurren dentro del ESP32.
+// Conectar el celular a la red ESP32Det_Fer y abrir http://192.168.4.1
+#define WIFI_SSID  "ESP32Det_Fer"
+#define WIFI_CLAVE "Det12345."
+
+static const char PAGINA[] PROGMEM = R"rawliteral(<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Detector ESP32-CAM</title>
+<style>
+:root{--bg:#f4f5f7;--c:#fff;--t:#1b1f24;--m:#667;--a:#1f5fbf;--v:#1a7f37;--bd:#d8dce2}
+@media(prefers-color-scheme:dark){:root{--bg:#121417;--c:#1c2026;--t:#e8eaed;--m:#9aa3ad;--a:#6aa4ff;--v:#4cc27a;--bd:#323a44}}
+body{margin:0;padding:12px 16px;background:var(--bg);color:var(--t);font:16px/1.4 system-ui,sans-serif;max-width:520px;margin-inline:auto}
+.c{background:var(--c);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0;text-align:center}
+img{width:100%;border-radius:8px;background:#000;image-rendering:auto}
+#cl{font-size:42px;font-weight:800;margin:4px 0}#pr{color:var(--m)}
+#gs{font-size:22px;font-weight:700;min-height:30px;color:var(--v)}
+button{font:inherit;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--c);color:var(--t);cursor:pointer}
+ul{list-style:none;padding:0;margin:6px 0;text-align:left;font-size:14px;color:var(--m)}h1{font-size:15px;color:var(--m);margin:2px 0}
+</style></head><body>
+<h1>Detector de objetos en el ESP32-CAM (sin PC ni internet)</h1>
+<div class="c"><img id="f" alt="cámara"><div id="cl">—</div><div id="pr"></div><div id="gs"></div></div>
+<div class="c"><button id="b" onclick="tg()">Gestos: …</button> <span id="ng" class="m"></span>
+<ul id="lg"></ul></div>
+<script>
+const N={vasorojo:'VASO',jarraroja:'JARRA',laptop:'LAPTOP'};let on=true;
+async function t(){try{const e=await(await fetch('/estado',{cache:'no-store'})).json();
+document.getElementById('cl').textContent=e.clase?N[e.clase]||e.clase:'Sin objeto';
+document.getElementById('pr').textContent=e.clase?'prob. '+e.prob.toFixed(2)+' · centro ('+e.x+', '+e.y+') · '+e.ms+' ms por cuadro':'';
+document.getElementById('gs').textContent=e.gesto?'Gesto: '+e.gesto+'…':'';
+on=e.gestos_on;document.getElementById('b').textContent='Gestos: '+(on?'ACTIVADOS':'desactivados');
+document.getElementById('ng').textContent='Hechos: '+e.n_gestos;
+document.getElementById('lg').innerHTML=e.log.map(x=>'<li>'+x+'</li>').join('');
+document.getElementById('f').src='/foto?'+Date.now();}catch(_){}}
+async function tg(){await fetch('/gestos?v='+(on?0:1));t();}
+setInterval(t,800);t();
+</script></body></html>)rawliteral";
+
+static httpd_handle_t servidor = nullptr;
+
+static esp_err_t h_pagina(httpd_req_t *r) {
+  httpd_resp_set_type(r, "text/html; charset=utf-8");
+  return httpd_resp_send(r, PAGINA, HTTPD_RESP_USE_STRLEN);
+}
+
+static esp_err_t h_estado(httpd_req_t *r) {
+  static char json[1100];
+  char clase[24], gesto[16], ev[8][56];
+  float prob; int x, y, ms, ng, ne;
+  xSemaphoreTake(mtx, portMAX_DELAY);
+  strcpy(clase, est_clase); strcpy(gesto, est_gesto);
+  prob = est_prob; x = est_x; y = est_y; ms = est_ms; ng = est_ngestos; ne = n_eventos;
+  memcpy(ev, eventos, sizeof(ev));
+  xSemaphoreGive(mtx);
+  int n = snprintf(json, sizeof(json),
+                   "{\"clase\":\"%s\",\"prob\":%.2f,\"x\":%d,\"y\":%d,\"ms\":%d,\"gesto\":\"%s\",\"gestos_on\":%s,\"n_gestos\":%d,\"log\":[",
+                   clase, prob, x, y, ms, gesto, gestos_activos ? "true" : "false", ng);
+  for (int i = 0; i < ne && i < 8 && n < (int)sizeof(json) - 80; i++) {
+    n += snprintf(json + n, sizeof(json) - n, "%s\"%s\"", i ? "," : "", ev[(ne - 1 - i) % 8]);
+  }
+  snprintf(json + n, sizeof(json) - n, "]}");
+  httpd_resp_set_type(r, "application/json");
+  httpd_resp_set_hdr(r, "Cache-Control", "no-store");
+  return httpd_resp_send(r, json, HTTPD_RESP_USE_STRLEN);
+}
+
+static esp_err_t h_foto(httpd_req_t *r) {
+  xSemaphoreTake(mtx, portMAX_DELAY);
+  size_t n = jpg_len;
+  if (n) memcpy(jpg_tx, jpg_buf, n);
+  xSemaphoreGive(mtx);
+  if (!n) return httpd_resp_send_404(r);
+  httpd_resp_set_type(r, "image/jpeg");
+  httpd_resp_set_hdr(r, "Cache-Control", "no-store");
+  return httpd_resp_send(r, (const char *)jpg_tx, n);
+}
+
+static esp_err_t h_gestos(httpd_req_t *r) {
+  char q[16], v[4];
+  if (httpd_req_get_url_query_str(r, q, sizeof(q)) == ESP_OK && httpd_query_key_value(q, "v", v, sizeof(v)) == ESP_OK) {
+    gestos_activos = v[0] == '1';
+    registrar(gestos_activos ? "gestos activados" : "gestos desactivados");
+  }
+  return httpd_resp_send(r, "ok", HTTPD_RESP_USE_STRLEN);
+}
+
+static void iniciar_web() {
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(WIFI_SSID, WIFI_CLAVE);
+  httpd_config_t cfg = HTTPD_DEFAULT_CONFIG();
+  cfg.server_port = 80;
+  cfg.max_uri_handlers = 6;
+  if (httpd_start(&servidor, &cfg) != ESP_OK) {
+    Serial.println("ERROR;web");
+    return;
+  }
+  const httpd_uri_t rutas[] = {{"/", HTTP_GET, h_pagina, nullptr}, {"/estado", HTTP_GET, h_estado, nullptr},
+                               {"/foto", HTTP_GET, h_foto, nullptr}, {"/gestos", HTTP_GET, h_gestos, nullptr}};
+  for (auto &u : rutas) httpd_register_uri_handler(servidor, &u);
+  Serial.printf("WIFI;%s;%s\n", WIFI_SSID, WiFi.softAPIP().toString().c_str());
+}
+
 void setup() {
   Serial.begin(115200);
+  mtx = xSemaphoreCreateMutex();
 
   // Pines del L298N como salida en LOW: sin esto flotan y los motores pueden moverse.
   for (int pin : {12, 13, 14, 15}) {
@@ -225,7 +369,11 @@ void setup() {
     while (true) delay(1000);
   }
 
+  jpg_buf = (uint8_t *)ps_malloc(JPG_MAX);   // si falta memoria, la página solo pierde la foto
+  jpg_tx = (uint8_t *)ps_malloc(JPG_MAX);
+  if (!jpg_tx) jpg_buf = nullptr;
   configurar_motores();                   // después de la cámara: los motores quedan en duty 0 (pines en bajo)
+  iniciar_web();
 
   Serial.printf("INFO;modelo=%s;entrada=%dx%d;umbral=%.2f;core=%d.%d.%d\n",
                 EI_CLASSIFIER_PROJECT_NAME, EI_CLASSIFIER_INPUT_WIDTH, EI_CLASSIFIER_INPUT_HEIGHT, UMBRAL,
@@ -273,6 +421,7 @@ void loop() {
   int n = 0;
   const char *mejor = nullptr;            // clase con mayor probabilidad en este cuadro
   float mejor_p = 0;
+  int mx = 0, my = 0;
 #if EI_CLASSIFIER_OBJECT_DETECTION == 1
   for (uint32_t i = 0; i < r.bounding_boxes_count; i++) {
     auto bb = r.bounding_boxes[i];
@@ -281,9 +430,18 @@ void loop() {
                   bb.label, bb.value, (unsigned)(bb.x + bb.width / 2), (unsigned)(bb.y + bb.height / 2),
                   (unsigned)bb.width, (unsigned)bb.height);
     n++;
-    if (bb.value > mejor_p) { mejor_p = bb.value; mejor = bb.label; }
+    if (bb.value > mejor_p) {
+      mejor_p = bb.value; mejor = bb.label;
+      mx = bb.x + bb.width / 2; my = bb.y + bb.height / 2;
+    }
   }
 #endif
+  xSemaphoreTake(mtx, portMAX_DELAY);       // estado para la página del celular
+  strncpy(est_clase, mejor ? mejor : "", sizeof(est_clase) - 1);
+  est_clase[sizeof(est_clase) - 1] = 0;
+  est_prob = mejor_p; est_x = mx; est_y = my;
+  est_ms = (int)(r.timing.dsp + r.timing.classification);
+  xSemaphoreGive(mtx);
   if (n == 0) {
     Serial.printf("NONE;%lu;%d;%d\n", t, (int)r.timing.dsp, (int)r.timing.classification);
   }

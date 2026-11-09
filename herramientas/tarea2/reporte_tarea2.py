@@ -280,7 +280,7 @@ def construir():
            "llegaba al modelo como azul y no se detectaba nada; se corrigió y se verificó volcando por serie la imagen que ve el modelo; (b) el "
            "destello del LED al detectar iluminaba el cuadro siguiente (el dataset no usó flash) y calentaba el LED, por lo que se desactivó. "
            "Al detectar, el robot **hace un gesto**: si la misma clase domina en 2 de 3 cuadros, el vaso hace que asienta (adelante y atrás), la jarra que niega (giros "
-           "izquierda, derecha, izquierda) y la laptop que gira una vuelta, con PWM limitado y una pausa de 3 s para no repetirlo. No se implementó el reto de la "
+           "izquierda, derecha, izquierda) y la laptop que gira (unos 1.8 s de tiempo fijo, aún sin calibrar a 360°), con PWM limitado y una pausa de 3 s para no repetirlo. Una página para el celular, servida por el propio ESP32, muestra la foto, la clase detectada y el gesto en curso. No se implementó el reto de la "
            "pantalla OLED. **[Pendiente: describir la prueba autónoma con power bank y anexar fotos o video.]**")
 
     agregar_titulo_seccion(doc, "2.4 Pruebas", nivel=2)
