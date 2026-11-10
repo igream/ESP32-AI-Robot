@@ -26,6 +26,18 @@ Kit LaFvin ESP32 Camera 4WD Robot Car V3 (ESP32-CAM AI-Thinker con cámara OV366
 - Python 3 con `pyserial`, `numpy`, `scipy` y `matplotlib` (`pip install -r herramientas/requirements.txt`).
 - Para la visión: Node.js, Edge Impulse CLI (`npm install -g edge-impulse-cli`) y una cuenta gratuita de Edge Impulse.
 
+## Enlaces
+
+| Qué | Dónde |
+|---|---|
+| Repositorio | https://github.com/igream/ESP32-AI-Robot |
+| Proyecto de Edge Impulse (público, modelo de la Tarea 5) | https://studio.edgeimpulse.com/public/1159326/live |
+| Video de la Tarea 4 (secuencia con el monitor serie) | https://youtu.be/V50d3I37h6I |
+| Página del robot con `robot_esp32cam` (WiFi `ESP32Car_Fer`) | http://192.168.4.1/tarea1 |
+| Página del detector con `deteccion_ei` (WiFi `ESP32Det_Fer`) | http://192.168.4.1 |
+
+**Cargar el modelo de la Tarea 5 en otra computadora:** clona el repositorio, instala en el Arduino IDE el ZIP de la librería de Edge Impulse (`Sketch → Include Library → Add .ZIP Library`), elige la placa *AI Thinker ESP32-CAM* (core esp32 3.3.12) y sube `firmware/deteccion_ei/`. Los ZIP no están en GitHub por su tamaño (5 MB): están en la carpeta `modelos/` de Google Drive, o se descargan del Studio en *Deployment → Arduino library*, con la cuenta dueña del proyecto.
+
 ## Cómo usarlo
 
 **Probar el robot**
