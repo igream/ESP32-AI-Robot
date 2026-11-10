@@ -140,7 +140,7 @@ def etapas():
         ("T2.5 despliegue (sketch en el robot)", bool(est.get("desplegado")), "ver plan T2.5; luego: python tarea2.py marcar desplegado"),
         (f"T2.6 pruebas ({total_pruebas})", contar_pruebas() >= total_pruebas, "python tarea2.py pruebas --puerto COM8"),
         ("T2.7 resultados", ruta("resultados/resultados.md").exists(), "python tarea2.py resultados"),
-        ("T2.8 reporte", (RAIZ / "docs/Tarea2/REPORTE.md").exists(), "escribir docs/Tarea2/REPORTE.md"),
+        ("T2.8 reporte", (RAIZ / "docs/Tarea2/REPORTE_Tarea5.docx").exists(), "python herramientas/tarea2/reporte_tarea2.py"),
     ]
 
 

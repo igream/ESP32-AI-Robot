@@ -61,7 +61,7 @@ def _tabla(doc, enc, filas, **kw):
 
 
 def cargar():
-    ruta = sorted(SALIDA.glob("tarea1_*.json"))[-1]
+    ruta = sorted((SALIDA / "datos").glob("tarea1_*.json"))[-1]
     d = json.loads(ruta.read_text(encoding="utf-8"))
     corr = {k: [] for k in OBJETIVO}
     for c in d["calib"]:
@@ -258,7 +258,7 @@ def construir():
     t.autofit = False
     filas = [("Repositorio en GitHub (código, datos y reportes)", URL_REPO),
              ("Video de la secuencia con el monitor serie (YouTube)", URL_VIDEO),
-             ("Datos crudos exportados de la página /tarea1", f"{URL_REPO}/blob/main/docs/Tarea1/{nombre_json}")]
+             ("Datos crudos exportados de la página /tarea1", f"{URL_REPO}/blob/main/docs/Tarea1/datos/{nombre_json}")]
     for fila, (etq, url) in zip(t.rows, filas):
         fila.cells[0].width, fila.cells[1].width = fw.Inches(2.6), fw.Inches(3.5)
         fw.agregar_texto(fila.cells[0].paragraphs[0], f"**{etq}**", 9)
@@ -456,7 +456,7 @@ def construir():
     fw.agregar_texto(p, " · Video de la secuencia: ")
     fw.hipervinculo(p, URL_VIDEO, URL_VIDEO)
     fw.agregar_texto(p, f". Evidencias incluidas: fotos del robot y diagrama (Figuras {FIG['fotos']} y {FIG['diagrama']}), capturas del código y del monitor serie "
-                        f"(Figuras {FIG['cod1']} a {FIG['serie']}), tablas de calibración (Tablas 2–4) y datos crudos en docs/Tarea1/{nombre_json}.")
+                        f"(Figuras {FIG['cod1']} a {FIG['serie']}), tablas de calibración (Tablas 2–4) y datos crudos en docs/Tarea1/datos/{nombre_json}.")
 
     referencias(doc, [
         ("R. Siegwart, I. R. Nourbakhsh, and D. Scaramuzza, *Introduction to Autonomous Mobile Robots*, 2nd ed. Cambridge, MA, USA: MIT Press, 2011. "

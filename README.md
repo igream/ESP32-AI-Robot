@@ -13,7 +13,8 @@ Robot móvil de 4 ruedas con **ESP32-CAM** para el curso de Robótica (UAEMéx).
 | `firmware/deteccion_ei/` | Detector de objetos con gestos (necesita tu librería de Edge Impulse) |
 | `herramientas/` | Scripts de PC: `calibrar.py`, `tarea1_descargar.py`, `reporte_pdf.py` |
 | `herramientas/tarea2/` | App de PC de la detección: captura, subida, pruebas y resultados |
-| `docs/` | Enunciados, planes y reportes |
+| `docs/` | Enunciados, planes, reportes finales (`Tarea1/` = Tarea 4 del curso, `Tarea2/` = Tarea 5), datos de calibración y referencias |
+| `modelos/` | ZIP de Edge Impulse (no se suben a git; se regeneran desde el Studio) |
 
 ## Material
 

@@ -1,7 +1,7 @@
 """Convierte un reporte en Markdown a PDF con Microsoft Edge o Google Chrome (sin instalar nada).
 
 Uso:  python herramientas/reporte_pdf.py [ruta/al/REPORTE.md]
-Sin argumento usa docs/Tarea1/REPORTE.md.
+Sin argumento usa docs/Tarea1/_borrador/REPORTE.md (borrador anterior; el reporte final es REPORTE_Tarea4.docx).
 Salida: el mismo nombre con extension .pdf, junto al .md.
 
 El Markdown y el diagrama Mermaid se dibujan en el navegador (marked y mermaid
@@ -14,7 +14,7 @@ import subprocess
 import sys
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
-MD_DEFECTO = RAIZ / "docs" / "Tarea1" / "REPORTE.md"
+MD_DEFECTO = RAIZ / "docs" / "Tarea1" / "_borrador" / "REPORTE.md"
 # Edge o Chrome: los dos aceptan las mismas opciones de impresión headless.
 EDGE = [
     r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",

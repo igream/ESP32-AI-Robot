@@ -1,10 +1,10 @@
 # Pendientes
 
 ## Mediciones físicas (necesito herramientas)
-- [ ] **L**: distancia entre el centro de las llantas izquierdas y el de las derechas (cm).
-- [ ] **Distancia entre ejes** (llanta delantera a trasera, mismo lado), en cm. Influye en cuánto derrapan los giros de un carro 4WD.
-- [ ] **Diámetro de llanta** (cm).
-- [ ] **Voltaje de la batería** cargada y en reposo (V), y su voltaje bajo carga con los motores girando.
+- [x] **L**: distancia entre el centro de las llantas izquierdas y el de las derechas (cm).
+- [x] **Distancia entre ejes** (llanta delantera a trasera, mismo lado), en cm. Influye en cuánto derrapan los giros de un carro 4WD.
+- [x] **Diámetro de llanta** (cm).
+- [x] **Voltaje de la batería** cargada y en reposo (V), y su voltaje bajo carga con los motores girando.
 
 ## Decisiones tomadas
 - [x] **PWM (Tarea 1):** se queda en los pines IN, con los jumpers ENA/ENB puestos y la velocidad variable por software. Se explica así en el reporte. El paso a ENA/ENB queda para cuando el ESP32-WROOM-32D controle los motores.
@@ -55,8 +55,9 @@ Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y
 - [x] Firmware de calibración (`firmware/robot_esp32cam/`): WiFi `ESP32Car_Fer`, funciones modulares, corrección por lado y `pwm_max`. Compila con el core ESP32 3.3.12.
 - [x] Endpoint `/move`, secuencia de la tarea, prueba de motores y rampa de PWM mínimo, con etiquetas en el monitor serie.
 - [x] Script de PC para registrar pruebas y calcular estadística (`herramientas/calibrar.py`), probado con datos simulados.
-- [x] Borrador del reporte (`docs/Tarea1/REPORTE.md`).
+- [x] Borrador del reporte (ahora en `docs/Tarea1/_borrador/REPORTE.md`; el reporte final es `docs/Tarea1/REPORTE_Tarea4.pdf`).
 - [x] Subir el firmware al robot y probarlo con las ruedas en el aire (sentido de motores y PWM mínimo, Parte B).
 - [x] Página `/calibrar` en el robot (captura de mediciones desde el celular, exporta CSV). Subida al robot y probada por Fer (2026-11-06); evoluciona a `/tarea1` (ver `docs/PLAN_IMPLEMENTACION.md`).
-- [ ] Mediciones: barridos, pruebas de comparación y validación por coordenadas.
-- [ ] Llenar las tablas del reporte, fotos, diagrama dibujado, video y exportar a PDF.
+- [x] Calibración de tiempos (E2) y validación de 3 repeticiones (E3) hechas el 2026-11-10 con la página `/tarea1`. Los barridos y la validación por coordenadas de `calibrar.py` no se hicieron.
+- [x] Reporte de la Tarea 4 con tablas, fotos, diagrama, video y PDF (2026-11-10).
+- [ ] Tarea 5: prueba autónoma con power bank (volver a subir `deteccion_ei`) y revisar los PDF finales.
