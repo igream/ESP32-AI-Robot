@@ -61,3 +61,7 @@ Ya tengo: ESP32-CAM (cámara del kit), ESP32-WROOM-32D, chasis, motores, L298N y
 - [x] Calibración de tiempos (E2) y validación de 3 repeticiones (E3) hechas el 2026-11-10 con la página `/tarea1`. Los barridos y la validación por coordenadas de `calibrar.py` no se hicieron.
 - [x] Reporte de la Tarea 4 con tablas, fotos, diagrama, video y PDF (2026-11-10).
 - [ ] Tarea 5: prueba autónoma con power bank (volver a subir `deteccion_ei`) y revisar los PDF finales.
+
+## Robot AIoT (opción 8, entrega 19-nov-2026)
+- [ ] Aprobar las decisiones D1–D9 de `docs/PLAN_AIOT.md` y conseguir los objetos (pelota y cono).
+- [ ] Seguir las etapas A–D de `docs/PLAN_AIOT.md`.
