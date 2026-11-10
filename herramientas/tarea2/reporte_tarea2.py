@@ -374,21 +374,26 @@ def construir():
 
     agregar_referencias_ieee(doc, [
         "The Professor Garcia, \u201cEntrenando IA desde cero para reconocer objetos nuevos con ESP32-CAM, Edge Impulse, Arduino,\u201d YouTube, "
-        "11 dic. 2024. [Online]. Available: https://www.youtube.com/watch?v=9uhKfEK73nA",
+        "11 dic. 2024. [Online]. Available: https://www.youtube.com/watch?v=9uhKfEK73nA. Accessed: Nov. 8, 2026.",
         "Edge Impulse, \u201cAnnouncing Official Support for the Espressif ESP-EYE (ESP32),\u201d 27 abr. 2022. [Online]. Available: "
-        "https://www.edgeimpulse.com/blog/announcing-official-support-for-the-espressif-esp-eye-esp32/",
-        "Edge Impulse, \u201cAdd Sight to Your ESP32,\u201d 8 sep. 2021. [Online]. Available: https://www.edgeimpulse.com/blog/add-sight-to-your-esp32/",
+        "https://www.edgeimpulse.com/blog/announcing-official-support-for-the-espressif-esp-eye-esp32/. Accessed: Nov. 8, 2026.",
+        "Edge Impulse, \u201cAdd Sight to Your ESP32,\u201d 8 sep. 2021. [Online]. Available: https://www.edgeimpulse.com/blog/add-sight-to-your-esp32/. Accessed: Nov. 8, 2026.",
         "R. Kallimani, K. Pai, P. Raghuwanshi, S. Iyer and O. L. A. L\u00f3pez, \u201cTinyML: Tools, applications, challenges, and future research "
         "directions,\u201d Multimedia Tools and Applications, vol. 83, no. 10, pp. 29015\u201329045, 2024 (publicado en l\u00ednea sep. 2023), "
-        "doi: 10.1007/s11042-023-16740-9.",
+        "doi: 10.1007/s11042-023-16740-9. [Online]. Available: https://doi.org/10.1007/s11042-023-16740-9",
         "P. P. Ray, \u201cA review on TinyML: State-of-the-art and prospects,\u201d J. King Saud Univ. \u2013 Comput. Inf. Sci., vol. 34, no. 4, "
-        "pp. 1595\u20131623, abr. 2022, doi: 10.1016/j.jksuci.2021.11.019.",
+        "pp. 1595\u20131623, abr. 2022, doi: 10.1016/j.jksuci.2021.11.019. [Online]. Available: https://doi.org/10.1016/j.jksuci.2021.11.019",
     ])
     # [11] se numera aparte para conservar la numeración del enunciado
     agregar_parrafo(doc, [("[11] ", True, False, 8.0),
                           ("N. Badalyan, \u201cFOMO Edge Impulse detecte potato beetle,\u201d Hackster.io, 23 jun. 2022. [Online]. Available: "
-                           "https://www.hackster.io/norik-badalyan/fomo-edge-impulse-detecte-potato-beetle-6ac2a7", False, False, 8.0)],
+                           "https://www.hackster.io/norik-badalyan/fomo-edge-impulse-detecte-potato-beetle-6ac2a7. Accessed: Nov. 8, 2026.", False, False, 8.0)],
                     espacio_despues=1.5, interlineado=1.0)
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    import formato_word as fw
+    for t in doc.tables:
+        fw.tabla_gris(t)
+    fw.todo_negro(doc)
     ruta = SALIDA / "REPORTE_Tarea5.docx"
     doc.save(str(ruta))
     print("Guardado", ruta)
