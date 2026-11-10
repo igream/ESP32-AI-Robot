@@ -58,6 +58,13 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
 Enunciado: `docs/Asignaciones/Tarea_Robot_AIoT_ESP32CAM_EdgeImpulse.docx` (**entrega: 19 de noviembre de 2026**). Pide elegir una de 8 aplicaciones y entregar: dataset FOMO de 100–150 imágenes por clase con variación de luz, fondo y distancia **más una clase de fondo** (negativos); modelo FOMO en el ESP32-CAM; una **acción del robot** según la detección (umbral ≥ 0.8); **dashboard IoT** con al menos clase y confianza (MQTT, HTTP o ESP-NOW; Node-RED, ThingSpeak, Blynk o Grafana); diagrama de flujo y de arquitectura; video de 2–3 min; reporte de 4–6 páginas (latencia, memoria, iluminación, falsos positivos). Bonus +10: comparar dos modelos (resolución o int8) en latencia y precisión.
 
 **Decisión de Fer (2026-11-10): se hará la opción 8, seguimiento de objetivo.** El plan de implementación se redacta en `docs/PLAN_AIOT.md` (chat con Opus, 2026-11-10).
+- **Decisiones del plan, revisadas por Fer el 2026-11-10:**
+  - **Clases:** `jabonzote` es el objetivo que el robot sigue (barra de jabón Zote con envoltura). `vasoalreves` es el obstáculo tipo cono que el robot evita (los vasos de la Tarea 5 boca abajo y con cinta). Además, ≥ 100 negativos.
+  - **IoT:** MQTT → Node-RED con Dashboard 2.0 en la PC, con el broker Aedes dentro de Node-RED. El robot en AP+STA.
+  - **Control a pasos:** el método para estimar el ángulo y la distancia **se elige comparando varios** (lineal, cámara estenopeica, regresión, por zonas, geometría del piso, tamaño de caja, tabla), con validación cruzada y luego en lazo cerrado (paso A3.3).
+  - **Bonus:** comparar los modelos 96×96 y 64×64, ambos int8.
+  - **Alimentación:** **todas las pruebas con movimiento usan las pilas 18650**. La fuente externa no se usa con el robot en movimiento, porque se puede desconectar y hacer un corto. El voltaje en el driver se mide con multímetro y se escribe en el dashboard.
+  - **Firmware:** `seguimiento_ei` es una copia nueva de `deteccion_ei`, que queda congelado.
 
 Puntos de partida y aprendizajes:
 - **Reutilizable:** cadena FOMO completa (captura por WiFi, subida y etiquetado en Edge Impulse, firmware `deteccion_ei` con inferencia local, pruebas con `tarea2.py`), movimientos calibrados de la Tarea 4 (ω ≈ 192 °/s, v ≈ 72.6 cm/s, `t90`/`t90d`/`t360`; pose estimada en `robot_motion`), página web servida por el ESP32 y los generadores de reporte con formato institucional.
@@ -83,7 +90,7 @@ Puntos de partida y aprendizajes:
 - **Motores:** driver L298N con 4 motores TT amarillos. Los 2 motores de cada lado van en paralelo, así que el robot se comporta como diferencial aunque gire derrapando (skid-steer).
 - **Alimentación:** 3 × 18650 (9–12.6 V). El regulador del L298N da 5 V al ESP32-CAM.
   - Con las baterías bajas, al quitar el USB la ESP32-CAM se reinicia en bucle (brownout) y al final se apaga. El LED rojo (GPIO33) lo enciende el firmware una sola vez al terminar de arrancar y no parpadea; si parpadea, son reinicios.
-  - Por ahora las pruebas usan una **fuente externa conectada al portapilas** (máximo 12.6 V). Anotar su voltaje en cada prueba: los tiempos calibrados solo valen para ese voltaje. Recargar las baterías cuando se pueda.
+  - En la Tarea 4 algunas pruebas usaron una **fuente externa conectada al portapilas** (máximo 12.6 V). **Desde la asignación AIoT, las pruebas con movimiento usan las pilas** (riesgo de corto con la fuente), midiendo el voltaje en el driver. Anotar su voltaje en cada prueba: los tiempos calibrados solo valen para ese voltaje. Recargar las baterías cuando se pueda.
 - **Pines:**
 
 | Pin | Función |
