@@ -53,9 +53,24 @@ Los dos chats se coordinan con este archivo, `docs/PENDIENTES.md` y el historial
     - **Red:** el WiFi de la PC se suelta solo de `ESP32Car_Fer` (no es el robot); reconectar con `netsh wlan connect name=ESP32Car_Fer`. El panel integrado de Claude no muestra la vista previa del servidor (usar Chrome). Con `deteccion_ei` el robot no crea WiFi: el celular y la PC deben estar en la misma red (la de la casa).
   - **T1.2 (2026-11-07):** página `/tarea1` (`tarea1_html.h`) escrita, compilada (36 % de flash), subida al robot por COM8 y revisada en el navegador con datos simulados (render de las 8 secciones, regresión de E2, resultados de E4, Markdown y CSV). **Nunca se ejecutó un movimiento desde la página**: lo primero que hay que probar con el robot en el piso es E2 (Ejecutar → medir → Aceptar tiempo). `/calibrar` redirige a `/tarea1#libre`. Sigue T1.3.1 (`herramientas/tarea1_descargar.py`).
 
+## Nueva asignación: Robot AIoT (decisión del 2026-11-10)
+
+Enunciado: `docs/Asignaciones/Tarea_Robot_AIoT_ESP32CAM_EdgeImpulse.docx` (**entrega: 19 de noviembre de 2026**). Pide elegir una de 8 aplicaciones y entregar: dataset FOMO de 100–150 imágenes por clase con variación de luz, fondo y distancia **más una clase de fondo** (negativos); modelo FOMO en el ESP32-CAM; una **acción del robot** según la detección (umbral ≥ 0.8); **dashboard IoT** con al menos clase y confianza (MQTT, HTTP o ESP-NOW; Node-RED, ThingSpeak, Blynk o Grafana); diagrama de flujo y de arquitectura; video de 2–3 min; reporte de 4–6 páginas (latencia, memoria, iluminación, falsos positivos). Bonus +10: comparar dos modelos (resolución o int8) en latencia y precisión.
+
+**Decisión de Fer (2026-11-10): se hará la opción 8, seguimiento de objetivo.** El plan de implementación se redacta en `docs/PLAN_AIOT.md` (chat con Opus, 2026-11-10).
+
+Puntos de partida y aprendizajes:
+- **Reutilizable:** cadena FOMO completa (captura por WiFi, subida y etiquetado en Edge Impulse, firmware `deteccion_ei` con inferencia local, pruebas con `tarea2.py`), movimientos calibrados de la Tarea 4 (ω ≈ 192 °/s, v ≈ 72.6 cm/s, `t90`/`t90d`/`t360`; pose estimada en `robot_motion`), página web servida por el ESP32 y los generadores de reporte con formato institucional.
+- **Falta:** objeto(s) de seguimiento nuevos (vaso, jarra y laptop no encajan; recomendado pelota, cono de color o persona: opacos y saturados), dataset más grande y variado, conexión IoT y dashboard, diagramas y video.
+- **Problema detectado (2026-11-10):** el modelo de la Tarea 5 no detecta con fondos muy distintos (30/30 en el montaje de entrenamiento, 10/15 en otra posición o luz). Causas: un solo escenario (mesa blanca, misma luz y distancia), objetos transparentes cuyo aspecto depende del fondo, y exposición/balance de blancos automáticos. Solución: dataset v4 con al menos 120 fotos por clase, 5 fondos, 3 distancias, 2–3 luces y 100 o más imágenes sin objeto; **el conjunto de prueba debe incluir fondos no vistos**. Probar también fijar exposición y balance de blancos.
+- **Velocidad:** 798 ms por cuadro (1.25 fps), así que el seguimiento solo puede ser a pasos (detectar, girar según el centroide, avanzar). Un modelo de 64×64 o más pequeño (~300 ms) ayuda y sirve para el bonus de comparar dos modelos.
+- **IoT:** `deteccion_ei` crea su propia red sin internet; para publicar hay que conectar el robot al WiFi de la casa (o AP+STA). Solo se envían metadatos (clase, confianza, posición), no imágenes: la inferencia sigue siendo local.
+- **Alimentación:** los motores aún no se han probado con baterías en el firmware del detector, y una batería se dañó antes; conectar las baterías al final y vigilar reinicios.
+- **Orden sugerido:** (1) IoT mínimo con el modelo actual y dashboard; (2) Fer captura el dataset v4; (3) entrenar y comparar dos modelos; (4) lógica de seguimiento y pruebas (latencia, luz, falsos positivos); (5) diagramas, reporte y video.
+
 ## Objetivos del curso (en orden)
 
-1. Movimientos definidos por coordenadas: saber de forma precisa cuánto se mueve el robot (calibración). **Etapa actual.**
+1. Movimientos definidos por coordenadas: saber de forma precisa cuánto se mueve el robot (calibración). **Completado en la Tarea 4.** Etapa actual: Tarea 5 (entrega 10-nov) y asignación AIoT (opción 8).
 2. Probar el movimiento desde una interfaz de usuario.
 3. Dataset con la cámara del robot de diferentes colores (primer ejercicio de visión).
 4. Dataset y detección de objetos con la cámara del robot.
